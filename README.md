@@ -99,3 +99,16 @@ npm run dev
 - 地域や公立/私立で絞り込み
 - 判定ロジックに内申点や学校選択問題実施校を反映
 - 管理画面から学校偏差値や推薦条件を更新
+
+## DB関連メモ
+
+- DB起動
+  powershell
+
+```
+"C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe" start -D "C:\Program Files\PostgreSQL\18\data"  
+```
+
+```
+"C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -p 5433; 
+```
