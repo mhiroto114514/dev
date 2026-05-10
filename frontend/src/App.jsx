@@ -257,7 +257,7 @@ function App() {
                   <div className="school-result-block" key={key}>
                     <div className="judgement-card">
                       <div>
-                        <p className="meta">{schoolCategoryLabels[entry.schoolCategory]} / {entry.department}</p>
+                        <p className="meta">{schoolCategoryLabels[entry.schoolCategory]}</p>
                         <h3>{entry.schoolName}</h3>
                         {shouldShowCourseLine && <p className="sub-meta">{entry.courseName}</p>}
                         <p className="sub-meta sub-meta-emphasis">{text.usedScore}: {scoreTypeLabels[entry.usedScoreType]} / {text.targetDev} {entry.targetDeviationValue}</p>
