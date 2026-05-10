@@ -78,6 +78,24 @@ body {
   margin-top: 0;
 }
 
+.result-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.result-header h2 {
+  margin: 0;
+}
+
+.result-header-school {
+  margin: 0;
+  font-weight: 700;
+  color: #334155;
+}
+
 .score-form {
   display: grid;
   gap: 16px;
@@ -111,6 +129,17 @@ body {
 .school-select-stack {
   display: grid;
   gap: 12px;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.score-grid label {
+  display: grid;
+  gap: 6px;
 }
 
 .search-field {
@@ -267,13 +296,55 @@ body {
 
 .result-stack {
   display: grid;
+  gap: 20px;
+}
+
+.print-score-summary {
+  display: none;
+}
+
+.comment-select-row label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.comment-select-row select {
+  border: 1px solid #d7dee8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  font: inherit;
+}
+
+.print-comment-text {
+  display: none;
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
+.print-notes {
+  display: none;
+}
+
+.ledger-student-head {
+  display: flex;
   gap: 16px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d7dee8;
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 700;
 }
 
 .school-result-block {
   display: grid;
   gap: 16px;
-  padding-bottom: 4px;
+  padding: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  background: #ffffff;
 }
 
 .judgement-card,
@@ -345,6 +416,12 @@ body {
   color: #64748b;
 }
 
+.sub-meta-emphasis {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #334155;
+}
+
 .judgement-card h3,
 .recommendation-card h4 {
   margin: 6px 0;
@@ -388,26 +465,70 @@ body {
   background: linear-gradient(135deg, #b91c1c, #ef4444);
 }
 
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+
+.deviation-axis {
+  position: relative;
+  border: 1px solid #d7dee8;
+  border-radius: 16px;
+  background: #fff;
+  padding: 18px 14px 34px;
 }
 
-.stat-card {
-  padding: 18px;
-  border-radius: 20px;
-  background: #f8fafc;
+.axis-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #cbd5e1 0%, #64748b 50%, #cbd5e1 100%);
+}
+
+.axis-marker {
+  position: absolute;
+  top: 8px;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.axis-marker small {
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1px 6px;
+  border-radius: 999px;
   border: 1px solid #e2e8f0;
 }
 
-.stat-card span {
-  display: block;
-  color: #64748b;
-  font-size: 0.92rem;
+.axis-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #0f766e;
+  border: 2px solid #ccfbf1;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.18);
 }
 
-.stat-card strong,
+.axis-diamond {
+  width: 12px;
+  height: 12px;
+  background: #2563eb;
+  border: 2px solid #dbeafe;
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16);
+}
+
+.axis-scale {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .recommendation-score {
   display: block;
   margin-top: 8px;
@@ -474,13 +595,29 @@ body {
     align-items: flex-start;
   }
 
-  .stats-row {
+  .deviation-axis {
+    padding-bottom: 40px;
+  }
+
+  .score-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media print {
-  /* フォームやボタン、操作用UIを隠す */
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 9.8pt;
+    line-height: 1.35;
+  }
+
   .hero,
   .form-panel,
   button,
@@ -489,34 +626,421 @@ body {
     display: none !important;
   }
 
-  /* レイアウトを印刷用に調整 */
+  .comment-select-row select {
+    display: none !important;
+  }
+
+  .comment-select-row label > span {
+    display: none !important;
+  }
+
+  .print-comment-text {
+    display: block;
+    font-size: 8.2pt;
+  }
+
+  .print-notes {
+    display: block;
+    margin-top: 1.5mm;
+    border-top: 1px solid #000;
+    padding-top: 1.2mm;
+    font-size: 7.8pt;
+    line-height: 1.25;
+  }
+
+  .print-notes p {
+    margin: 0 0 0.8mm;
+  }
+
+  .print-notes p:last-child {
+    margin-bottom: 0;
+  }
+
   .page-shell {
+    width: 100%;
     margin: 0;
     padding: 0;
   }
 
   .content-grid {
-    display: block; /* グリッド解除 */
+    display: block;
+    gap: 0;
   }
 
   .result-panel {
     box-shadow: none;
-    border: 1px solid #ccc;
-    padding: 20px;
+    border: 1px solid #000;
+    border-radius: 0;
+    background: #fff;
+    padding: 5.5mm;
     width: 100%;
   }
 
-  /* 改ページ制御（判定カードが途中で切れないようにする） */
-  .school-result-block {
-    page-break-inside: avoid;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
+  .result-panel h2 {
+    margin: 0 0 2.5mm;
+    padding-bottom: 1.2mm;
+    border-bottom: 1px solid #000;
+    font-size: 12pt;
   }
 
-  /* 背景色やボーダーを強制的に印刷（ブラウザ設定対策） */
+  .ledger-student-head {
+    margin: 0 0 3.2mm;
+    padding: 2mm 2.5mm;
+    border: 1px solid #000;
+    border-radius: 0;
+    background: #fff;
+    justify-content: flex-start;
+    font-size: 9.4pt;
+  }
+
+  .result-stack {
+    gap: 3.8mm;
+  }
+
+  .print-score-summary {
+    display: table;
+    width: 100%;
+    margin: 0 0 3mm;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 8.8pt;
+  }
+
+  .print-score-summary th,
+  .print-score-summary td {
+    border: 1px solid #000;
+    text-align: center;
+    padding: 1.4mm 1mm;
+    vertical-align: middle;
+    word-break: keep-all;
+  }
+
+  .print-score-summary thead th {
+    font-weight: 700;
+  }
+
+  .print-score-summary th:first-child {
+    width: 14%;
+  }
+
+  .school-result-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid #000 !important;
+    border-radius: 0 !important;
+    padding: 2.8mm;
+    margin: 0 0 3mm;
+  }
+
+  .school-result-block,
+  .school-result-block * {
+    border-color: #000 !important;
+  }
+
+  .judgement-card,
+  .recommendation-card {
+    border: 0;
+    border-bottom: 1px solid #000;
+    border-radius: 0;
+    background: #fff !important;
+    color: #000;
+    box-shadow: none;
+    padding: 2.6mm 3mm;
+    min-height: 17mm;
+  }
+
+  .judgement-card:has(.badge-A),
+  .judgement-card:has(.badge-B),
+  .judgement-card:has(.badge-C),
+  .judgement-card:has(.badge-D),
+  .judgement-card:has(.badge-E) {
+    border-color: #000 !important;
+    background: #fff !important;
+  }
+
+  .judgement-card h3,
+  .recommendation-card h4 {
+    margin: 0.8mm 0;
+    font-size: 11pt;
+  }
+
+  .meta,
+  .sub-meta,
+  .empty-inline {
+    color: #000;
+    font-size: 8.8pt;
+  }
+
+  .deviation-axis {
+    border: 0;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    border-radius: 0;
+    padding: 3mm 3mm 5.2mm;
+    background: #fff;
+  }
+
+  .axis-track {
+    background: #000 !important;
+    height: 1.4px;
+    border: 0;
+  }
+
+  .axis-dot,
+  .axis-diamond {
+    width: 3.2mm;
+    height: 3.2mm;
+    border: 1px solid #000;
+    background: #000 !important;
+    box-shadow: none;
+    position: relative;
+    z-index: 2;
+  }
+
+  .axis-marker {
+    top: 1.6mm;
+    transform: translateX(-50%);
+    z-index: 3;
+  }
+
+  .axis-marker small,
+  .axis-scale {
+    color: #000;
+    border-color: #000;
+    background: #fff;
+    font-size: 7.6pt;
+  }
+
+
+  .recommendation-score {
+    margin-top: 0.5mm;
+    font-size: 10pt;
+    color: #000;
+  }
+
+  .badge {
+    min-width: 14mm;
+    min-height: 14mm;
+    border: 1px solid #000;
+    border-radius: 0;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none;
+    padding: 0.5mm;
+  }
+
+  .badge small {
+    font-size: 7.2pt;
+  }
+
+  .badge span {
+    font-size: 11pt;
+  }
+
+  .recommendations {
+    margin-top: 2mm;
+    gap: 3mm;
+  }
+
+  .recommendations h3 {
+    margin: 0;
+    padding: 0 0 2mm;
+    border-bottom: 1px solid #000;
+    font-size: 12pt;
+  }
+
+  .recommendation-groups {
+    gap: 3mm;
+  }
+
+  .recommendation-group {
+    border: 1px solid #000;
+    padding: 0;
+    gap: 0;
+    break-inside: avoid;
+  }
+
+  .recommendation-group h4 {
+    margin: 0;
+    padding: 2.5mm 4mm;
+    border-bottom: 1px solid #000;
+    font-size: 10.5pt;
+  }
+
+  .recommendation-card {
+    border-bottom: 1px solid #000;
+  }
+
+  .recommendation-group .recommendation-card:last-child {
+    border-bottom: 0;
+  }
+
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Keep print layout close to on-screen result view */
+  .result-panel {
+    border: 1px solid rgba(148, 163, 184, 0.2) !important;
+    border-radius: 20px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: none !important;
+    padding: 12px !important;
+  }
+
+  .result-panel h2 {
+    border-bottom: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 20px !important;
+  }
+
+  .result-header {
+    margin-bottom: 8px !important;
+  }
+
+  .result-header-school {
+    font-size: 12px !important;
+    color: #334155 !important;
+  }
+
+  .ledger-student-head {
+    border: 1px solid #cfd8e3 !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    padding: 8px 10px !important;
+    margin-bottom: 10px !important;
+    font-size: 12px !important;
+  }
+
+  .print-score-summary {
+    margin-bottom: 14px !important;
+    font-size: 11.5px !important;
+  }
+
+  .result-stack {
+    gap: 14px !important;
+  }
+
+  .school-result-block {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    margin: 0 0 14px !important;
+    padding: 14px !important;
+    gap: 14px !important;
+  }
+
+  .school-result-block,
+  .school-result-block * {
+    border-color: initial !important;
+  }
+
+  .judgement-card,
+  .judgement-card:has(.badge-A),
+  .judgement-card:has(.badge-B),
+  .judgement-card:has(.badge-C),
+  .judgement-card:has(.badge-D),
+  .judgement-card:has(.badge-E) {
+    border: 1px solid #93c5fd !important;
+    border-radius: 16px !important;
+    background: #f8fbff !important;
+    padding: 16px !important;
+    min-height: auto !important;
+  }
+
+  .meta,
+  .sub-meta {
+    font-size: 12px !important;
+  }
+
+  .judgement-card h3 {
+    font-size: 22px !important;
+    margin: 6px 0 !important;
+  }
+
+  .badge {
+    min-width: 52px !important;
+    min-height: 52px !important;
+    border-radius: 16px !important;
+    border: none !important;
+    background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
+    color: #fff !important;
+  }
+
+  .badge span {
+    font-size: 30px !important;
+  }
+
+  .badge small {
+    font-size: 10px !important;
+  }
+
+  .deviation-axis {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    padding: 14px 12px 30px !important;
+  }
+
+  .axis-track {
+    height: 4px !important;
+    border: 0 !important;
+    background: linear-gradient(90deg, #cbd5e1 0%, #64748b 50%, #cbd5e1 100%) !important;
+  }
+
+  .axis-marker {
+    top: 2px !important;
+    z-index: 3 !important;
+  }
+
+  .axis-dot {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 999px !important;
+    background: #0f766e !important;
+    border: 2px solid #ccfbf1 !important;
+  }
+
+  .axis-diamond {
+    width: 10px !important;
+    height: 10px !important;
+    background: #2563eb !important;
+    border: 2px solid #dbeafe !important;
+    transform: rotate(45deg) !important;
+  }
+
+  .axis-scale {
+    font-size: 10px !important;
+    color: #64748b !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .comment-select-row {
+    display: block !important;
+  }
+
+  .comment-select-row label > span {
+    display: none !important;
+  }
+
+  .comment-select-row select {
+    display: none !important;
+  }
+
+  .print-comment-text {
+    display: block !important;
+    font-size: 9.6pt !important;
+    margin-top: 1.4mm !important;
+  }
+
+  .print-notes {
+    margin-top: 4mm !important;
+    border-top: 1px solid #d7dee8 !important;
+    padding-top: 2.8mm !important;
+    font-size: 8.9pt !important;
+    line-height: 1.4 !important;
   }
 }

@@ -30,7 +30,7 @@ Windows なら:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
-```
+
 
 `mvnw` を置いていないため、Maven がある環境では以下でも起動できます。
 
