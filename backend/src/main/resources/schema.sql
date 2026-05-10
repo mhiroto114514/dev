@@ -1,17 +1,15 @@
 CREATE TABLE if NOT EXISTS student (
     id serial PRIMARY KEY,
     student_id INTEGER NOT NULL UNIQUE,
-    name varchar(20) NOT NULL
+    name varchar(120) NOT NULL
 );
 
 CREATE TABLE if NOT EXISTS school (
     id serial PRIMARY KEY,
     name varchar(120) NOT NULL,
-    deviation INTEGER NOT NULL
+    deviation INTEGER NOT NULL,
+    school_category varchar(10) NOT NULL DEFAULT 'PUBLIC'
 );
-
-ALTER TABLE school
-    ALTER COLUMN name TYPE varchar(120);
 
 CREATE TABLE if NOT EXISTS result (
     id serial PRIMARY KEY,

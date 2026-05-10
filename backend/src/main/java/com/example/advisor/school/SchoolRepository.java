@@ -9,7 +9,6 @@ import java.util.Optional;
 @Repository
 public class SchoolRepository {
 
-    private static final SchoolCategory DEFAULT_CATEGORY = SchoolCategory.PUBLIC;
     private static final String DEFAULT_DEPARTMENT = "普通科";
 
     private final JdbcTemplate jdbcTemplate;
@@ -19,27 +18,31 @@ public class SchoolRepository {
     }
 
     public List<School> findAllSchools() {
-        String sql = "SELECT id, name FROM school ORDER BY deviation DESC, id";
+        String sql = "SELECT id, name, school_category FROM school ORDER BY deviation DESC, id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new School(
                 toSchoolCode(rs.getInt("id")),
                 rs.getString("name"),
-                DEFAULT_CATEGORY
+                toSchoolCategory(rs.getString("school_category"))
         ));
     }
 
     public List<School> findSchoolsByCategory(SchoolCategory schoolCategory) {
-        if (schoolCategory != DEFAULT_CATEGORY) {
-            return List.of();
-        }
-        return findAllSchools();
+        String sql = "SELECT id, name, school_category FROM school WHERE school_category = ? ORDER BY deviation DESC, id";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new School(
+                        toSchoolCode(rs.getInt("id")),
+                        rs.getString("name"),
+                        toSchoolCategory(rs.getString("school_category"))
+                ),
+                schoolCategory.name()
+        );
     }
 
     public Optional<School> findSchoolByCode(String schoolCode) {
-        String sql = "SELECT id, name FROM school WHERE id = ?";
+        String sql = "SELECT id, name, school_category FROM school WHERE id = ?";
         List<School> schools = jdbcTemplate.query(sql, (rs, rowNum) -> new School(
                         toSchoolCode(rs.getInt("id")),
                         rs.getString("name"),
-                        DEFAULT_CATEGORY
+                        toSchoolCategory(rs.getString("school_category"))
                 ),
                 fromSchoolCode(schoolCode)
         );
@@ -56,10 +59,14 @@ public class SchoolRepository {
     }
 
     public List<Course> findCoursesByCategory(SchoolCategory schoolCategory) {
-        if (schoolCategory != DEFAULT_CATEGORY) {
-            return List.of();
-        }
-        return findAllCourses();
+        String sql = "SELECT id, name, deviation FROM school WHERE school_category = ? ORDER BY deviation DESC, id";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("deviation")
+                ),
+                schoolCategory.name()
+        );
     }
 
     public Optional<Course> findCourseByCode(String courseCode) {
@@ -84,6 +91,17 @@ public class SchoolRepository {
                 ScoreType.FIVE_SUBJECT,
                 deviation
         );
+    }
+
+    private SchoolCategory toSchoolCategory(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return SchoolCategory.PUBLIC;
+        }
+        try {
+            return SchoolCategory.valueOf(raw);
+        } catch (IllegalArgumentException ex) {
+            return SchoolCategory.PUBLIC;
+        }
     }
 
     private String toSchoolCode(int id) {
