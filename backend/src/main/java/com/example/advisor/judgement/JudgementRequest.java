@@ -8,9 +8,20 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record JudgementRequest(
+        @NotNull @Min(1) Integer studentCode,
+        @NotNull @Min(1) Integer times,
+        @NotNull @Min(0) @Max(100) Integer japaneseScore,
+        @NotNull @Min(0) @Max(100) Integer mathScore,
+        @NotNull @Min(0) @Max(100) Integer englishScore,
+        @NotNull @Min(0) @Max(100) Integer scienceScore,
+        @NotNull @Min(0) @Max(100) Integer socialscienceScore,
+        @NotNull @Min(20) @Max(90) Integer japaneseDeviation,
+        @NotNull @Min(20) @Max(90) Integer mathDeviation,
+        @NotNull @Min(20) @Max(90) Integer englishDeviation,
+        @NotNull @Min(20) @Max(90) Integer scienceDeviation,
+        @NotNull @Min(20) @Max(90) Integer socialscienceDeviation,
         @NotNull @Min(20) @Max(90) Integer threeSubjectDeviation,
         @NotNull @Min(20) @Max(90) Integer fiveSubjectDeviation,
-        @NotNull @Size(max = 3) List<String> publicDesiredCourseCodes,
-        @NotNull @Size(max = 3) List<String> privateDesiredCourseCodes
+        @NotNull @Size(max = 3) List<String> desiredCourseCodes
 ) {
 }

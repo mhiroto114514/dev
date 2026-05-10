@@ -39,7 +39,7 @@ public class CourseController {
                 school.schoolCategory(),
                 course.scoreType(),
                 course.deviationValue(),
-                school.municipality().getLabel()
+                ""
         );
     }
 }
