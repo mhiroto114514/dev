@@ -1,10 +1,7 @@
 package com.example.advisor.judgement;
 
-import com.example.advisor.school.RecommendedSchool;
 import com.example.advisor.school.ScoreType;
 import com.example.advisor.school.SchoolCategory;
-
-import java.util.List;
 
 public record SchoolJudgementResult(
         String schoolName,
@@ -16,7 +13,6 @@ public record SchoolJudgementResult(
         ScoreType usedScoreType,
         int studentDeviationValue,
         int targetDeviationValue,
-        int difference,
-        List<RecommendedSchool> recommendedSchools
+        int difference
 ) {
 }

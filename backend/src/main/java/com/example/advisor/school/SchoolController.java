@@ -31,7 +31,7 @@ public class SchoolController {
                 school.code(),
                 school.name(),
                 school.schoolCategory(),
-                school.municipality().getLabel()
+                ""
         );
     }
 }
