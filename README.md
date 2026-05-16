@@ -1,6 +1,4 @@
-﻿# Saitama School Advisor（埼玉高校判定システム）
-
-この README は、システム開発に詳しくない方でも、PC 1台で初期構築から起動確認までできるように書いています。  
+﻿この README は、PC 1台で初期構築から起動確認までできるように書いています。  
 対象は **Windows 11** を想定しています。
 
 ## 1. このシステムで何を動かすか
@@ -36,25 +34,29 @@
 ### 2-2. インストール手順（Windows）
 
 1. Java（JDK）
-   - 上のリンクから `JDK 21` の Windows x64 インストーラー（`.msi`）を入れて実行
-   - 基本はデフォルト設定のままでOK
+
+- 上のリンクから `JDK 21` の Windows x64 インストーラー（`.msi`）を入れて実行
+- 基本はデフォルト設定のままでOK
 
 2. Maven
-   - 上のリンクから `Binary zip archive` をダウンロード
-   - 例: `C:\tools\apache-maven-3.9.11` に展開
-   - Windows の環境変数を設定
-   - `MAVEN_HOME` = `C:\tools\apache-maven-3.9.11`
-   - `Path` に `%MAVEN_HOME%\bin` を追加
-   - 設定後、PowerShell をいったん閉じて開き直す
+
+- 上のリンクから `Binary zip archive` をダウンロード
+- 例: `C:\tools\apache-maven-3.9.11` に展開
+- Windows の環境変数を設定
+- `MAVEN_HOME` = `C:\tools\apache-maven-3.9.11`
+- `Path` に `%MAVEN_HOME%\bin` を追加
+- 設定後、PowerShell をいったん閉じて開き直す
 
 3. Node.js
-   - 上のリンクから `LTS` 版の Windows インストーラー（`.msi`）を入れて実行
-   - 基本はデフォルト設定のままでOK
+
+- 上のリンクから `LTS` 版の Windows インストーラー（`.msi`）を入れて実行
+- 基本はデフォルト設定のままでOK
 
 4. PostgreSQL
-   - 上のリンクから Windows 用インストーラーを入手して実行
-   - インストール時に決めた `postgres` ユーザーのパスワードを必ず控える
-   - ポート番号（`5432` または `5433`）も控える
+
+- 上のリンクから Windows 用インストーラーを入手して実行
+- インストール時に決めた `postgres` ユーザーのパスワードを必ず控える
+- ポート番号（`5432` または `5433`）も控える
 
 ### 2-3. winget でインストールする手順（おすすめ）
 
@@ -100,7 +102,8 @@ psql --version
 補足:
 
 1. `mvn` が見つからない場合は、Maven の `Path` 設定が不足していることがほとんどです。
-2. `psql` が見つからない場合は、PostgreSQL の `bin` フォルダ（例: `C:\Program Files\PostgreSQL\18\bin`）を `Path` に追加してください。
+2. `psql` が見つからない場合は、PostgreSQL の `bin` フォルダ（例: `C:\Program Files\PostgreSQL\18\bin`）を `Path`
+   に追加してください。
 3. `winget` が見つからない場合は、Microsoft Store の「アプリ インストーラー」を更新するか、次を実行してください。
 
 ```powershell
@@ -122,6 +125,10 @@ cd C:\DevDrive\saitama-school-advisor
 PostgreSQL がサービス起動でない場合は、先に起動してください。  
 （例: Windows の「サービス」画面で PostgreSQL を開始）
 
+```powershell
+pg_ctl -D "C:\Program Files\PostgreSQL\18\data" start
+```
+
 ### 4-2. DB 作成
 
 `psql` でログインし、DB を作成します。
@@ -136,7 +143,8 @@ PostgreSQL が 5432 の場合は `-p 5432` にしてください。
 `psql` に入ったら次を実行します。
 
 ```sql
-CREATE DATABASE school_advisor;
+CREATE
+DATABASE school_advisor;
 ```
 
 作成済みならこの手順はスキップで大丈夫です。
@@ -199,8 +207,7 @@ npm run dev
 ```sql
 SELECT id, student_id, times, first_choice, second_choice, third_choice
 FROM result
-ORDER BY id DESC
-LIMIT 10;
+ORDER BY id DESC LIMIT 10;
 ```
 
 期待値:
@@ -275,13 +282,13 @@ TRUNCATE TABLE result, student, school RESTART IDENTITY CASCADE;
 ## 10. API 一覧（簡易）
 
 1. `GET /api/courses`  
-志望校選択用のコース一覧を取得
+   志望校選択用のコース一覧を取得
 
 2. `GET /api/students/{studentCode}`  
-生徒コードから氏名を取得
+   生徒コードから氏名を取得
 
 3. `POST /api/judgements`  
-判定実行 + 判定入力内容を `result` テーブルへ保存
+   判定実行 + 判定入力内容を `result` テーブルへ保存
 
 ## 11. 停止方法
 
