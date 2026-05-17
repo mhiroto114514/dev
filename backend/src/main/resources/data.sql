@@ -1,5 +1,4 @@
 TRUNCATE TABLE result, student, school RESTART IDENTITY CASCADE;
-
 INSERT INTO school (name, deviation, school_category)
 VALUES
   -- 公立高校
@@ -417,7 +416,63 @@ VALUES
   ('狭山ヶ丘高校（Ⅳ類:スポーツ・文化進学）', 46, 'PRIVATE'),
   ('東京農大第三高校（Ⅲコース）', 46, 'PRIVATE'),
   ('秀明英光高校（特別進学）', 45, 'PRIVATE'),
-  ('秀明英光高校（総合進学）', 41, 'PRIVATE');
+  ('秀明英光高校（総合進学）', 41, 'PRIVATE'),
+                                             ('開成（普通）', 74, 'PRIVATE'),
+                                                        ('筑波大学附属駒場（普通）', 74, 'NATIONAL'),
+                                                        ('渋谷教育学園幕張（普通）', 73, 'PRIVATE'),
+                                                        ('筑波大附属（普通）', 73, 'NATIONAL'),
+                                                        ('慶應義塾女子（普通）', 72, 'PRIVATE'),
+                                                        ('お茶の水女子大附（普通）', 72, 'NATIONAL'),
+                                                        ('慶應義塾志木（普通）', 71, 'PRIVATE'),
+                                                        ('早稲田大学本庄学院（普通）', 71, 'PRIVATE'),
+                                                        ('市川（普通）', 71, 'PRIVATE'),
+                                                        ('慶應義塾（普通）', 71, 'PRIVATE'),
+                                                        ('早稲田実業（普通）', 71, 'PRIVATE'),
+                                                        ('東京学芸大附（普通）', 71, 'NATIONAL'),
+                                                        ('佐野日大（α）', 71, 'PRIVATE'),
+                                                        ('明大付明治（普通）', 70, 'PRIVATE'),
+                                                        ('早稲田大学高等学院（普通）', 70, 'PRIVATE'),
+                                                        ('佐野日大（特進A）', 70, 'PRIVATE'),
+                                                        ('立教新座（普通）', 69, 'PRIVATE'),
+                                                        ('青山学院（普通）', 69, 'PRIVATE'),
+                                                        ('国際基督教大（普通）', 69, 'PRIVATE'),
+                                                        ('専修大松戸（普通:E類型）', 69, 'PRIVATE'),
+                                                        ('巣鴨（普通）', 68, 'PRIVATE'),
+                                                        ('中央大学（普通）', 68, 'PRIVATE'),
+                                                        ('法政大国際（普通）', 68, 'PRIVATE'),
+                                                        ('佐野日大（特進B）', 68, 'PRIVATE'),
+                                                        ('城北（普通）', 67, 'PRIVATE'),
+                                                        ('専修大松戸（普通:A類型）', 67, 'PRIVATE'),
+                                                        ('中央大杉並（普通）', 67, 'PRIVATE'),
+                                                        ('中央大附（普通）', 67, 'PRIVATE'),
+                                                        ('明大付中野（普通）', 66, 'PRIVATE'),
+                                                        ('芝浦工大柏（普通）', 66, 'PRIVATE'),
+                                                        ('明大付八王子（普通）', 66, 'PRIVATE'),
+                                                        ('法政大学（普通）', 65, 'PRIVATE'),
+                                                        ('國學院栃木（特別選抜S）', 65, 'PRIVATE'),
+                                                        ('東京科学大附属科学技術（科学・技術）', 63, 'NATIONAL'),
+                                                        ('群馬工業高専（全学科）', 63, 'KOSEN'),
+                                                        ('小山工業高専（全学科）', 62, 'KOSEN'),
+                                                        ('白鴎大足利（特別進学）', 62, 'PRIVATE'),
+                                                        ('東京工業高専（全学科）', 61, 'KOSEN'),
+                                                        ('佐野日大（スーパー進学）', 60, 'PRIVATE'),
+                                                        ('國學院栃木（特別選抜）', 59, 'PRIVATE'),
+                                                        ('青山学院大学系属浦和ルーテル学院（普通 ※単願のみ）', 58, 'PRIVATE'),
+                                                        ('筑波大附属坂戸（総合科学）', 57, 'NATIONAL'),
+                                                        ('國學院栃木（選抜）', 56, 'PRIVATE'),
+                                                        ('佐野日大（N進学）', 55, 'PRIVATE'),
+                                                        ('白鴎大足利（進学）', 54, 'PRIVATE'),
+                                                        ('國學院栃木（文理）', 52, 'PRIVATE'),
+                                                        ('関東学園大附属（特進）', 52, 'PRIVATE'),
+                                                        ('白鴎大足利（総合進学）', 49, 'PRIVATE'),
+                                                        ('足利大学附属（普通）', 44, 'PRIVATE'),
+                                                        ('関東学園大附属（進学）', 44, 'PRIVATE'),
+                                                        ('足利大学附属（情報処理）', 43, 'PRIVATE'),
+                                                        ('足利大学附属（自動車）', 41, 'PRIVATE'),
+                                                        ('足利大学附属（工業）', 40, 'PRIVATE'),
+                                                        ('佐野清澄（普通）', 39, 'PRIVATE'),
+                                                        ('佐野清澄（生活デザイン）', 39, 'PRIVATE'),
+                                                        ('青藍泰斗（普通）', 39, 'PRIVATE');
 -- 1. 生徒データの挿入
 INSERT INTO student (student_id, name)
 VALUES (2024001, '山田 太郎'),
@@ -430,19 +485,19 @@ SET name = EXCLUDED.name;
 -- student_id は studentテーブルのid（1,2,3）
 -- 志望校（first_choice等）は schoolテーブルのidを指定
 INSERT INTO result (student_id, times,
-                    japanese, math, english, science, socialscience,
-                    deviation_japanese, deviation_math, deviation_english, deviation_science, deviation_socialscience,
+                    japanese, math, english, science, socialstudies,
+                    deviation_japanese, deviation_math, deviation_english, deviation_science, deviation_socialstudies,
                     deviation_three, deviation_five,
+                    saitama_deviation_three, saitama_deviation_five,
                     first_choice, second_choice, third_choice)
 VALUES
 -- 山田太郎（id:1） 第1回テスト
-(1, 1, 85, 90, 88, 92, 80, 65, 70, 68, 72, 60, 68, 67, 1, 2, 3),
+(1, 1, 85, 90, 88, 92, 80, 65, 70, 68, 72, 60, 68, 67, 74, 73, 1, 2, 3),
 -- 山田太郎（id:1） 第2回テスト（成績アップ）
-(1, 2, 88, 95, 90, 95, 85, 68, 74, 70, 75, 65, 71, 70, 1, 2, 3),
+(1, 2, 88, 95, 90, 95, 85, 68, 74, 70, 75, 65, 71, 70, 76, 76, 1, 2, 3),
 
 -- 佐藤花子（id:2） 第1回テスト
-(2, 1, 60, 55, 65, 70, 68, 50, 48, 52, 55, 54, 50, 52, 10, 11, 12),
+(2, 1, 60, 55, 65, 70, 68, 50, 48, 52, 55, 54, 50, 52, 56, 58, 10, 11, 12),
 
 -- 鈴木一郎（id:3） 第1回テスト（理数特化）
-(3, 1, 70, 95, 75, 88, 65, 55, 75, 58, 68, 52, 63, 62, 4, 8, 15);
-
+(3, 1, 70, 95, 75, 88, 65, 55, 75, 58, 68, 52, 63, 62, 69, 68, 4, 8, 15);

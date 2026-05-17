@@ -2,19 +2,19 @@ package com.example.advisor.judgement;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/judgements")
-public class
-JudgementController {
+public class JudgementController {
 
     private final JudgementService judgementService;
+    private final CsvImportService csvImportService;
 
-    public JudgementController(JudgementService judgementService) {
+    public JudgementController(JudgementService judgementService, CsvImportService csvImportService) {
         this.judgementService = judgementService;
+        this.csvImportService = csvImportService;
     }
 
     @PostMapping
@@ -22,9 +22,9 @@ JudgementController {
         return judgementService.judge(request);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleBadRequest(IllegalArgumentException ex) {
-        return Map.of("message", ex.getMessage());
+    @PostMapping("/csv-import")
+    @ResponseStatus(HttpStatus.OK)
+    public CsvImportResponse csvImport(@RequestParam("file") MultipartFile file) {
+        return csvImportService.importAndJudge(file);
     }
 }

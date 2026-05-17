@@ -28,10 +28,10 @@ public class JudgementService {
         }
 
         List<SchoolJudgementResult> results = desiredCourseCodes.stream()
-                .filter(code -> code != null && !code.isBlank())
-                .distinct()
-                .map(code -> buildSchoolResult(code, request))
-                .toList();
+            .filter(code -> code != null && !code.isBlank())
+            .distinct()
+            .map(code -> buildSchoolResult(code, request))
+            .toList();
 
         if (results.isEmpty()) {
             throw new IllegalArgumentException("志望校を1校以上選択してください。");
@@ -47,9 +47,9 @@ public class JudgementService {
 
     private Integer toSchoolId(List<String> desiredCourseCodes, int index) {
         List<String> distinctCodes = desiredCourseCodes.stream()
-                .filter(code -> code != null && !code.isBlank())
-                .distinct()
-                .toList();
+            .filter(code -> code != null && !code.isBlank())
+            .distinct()
+            .toList();
         if (index >= distinctCodes.size()) {
             return null;
         }
@@ -62,43 +62,49 @@ public class JudgementService {
 
     private SchoolJudgementResult buildSchoolResult(String courseCode, JudgementRequest request) {
         Course desiredCourse = schoolRepository.findCourseByCode(courseCode)
-                .orElseThrow(() -> new IllegalArgumentException("志望コースが見つかりません。"));
+            .orElseThrow(() -> new IllegalArgumentException("志望コースが見つかりません。"));
         School desiredSchool = schoolRepository.findSchoolByCode(desiredCourse.schoolCode())
-                .orElseThrow();
+            .orElseThrow();
 
-        int studentDeviation = desiredCourse.scoreType() == ScoreType.THREE_SUBJECT
-                ? request.threeSubjectDeviation()
-                : request.fiveSubjectDeviation();
+        int studentDeviation = resolveStudentDeviation(desiredCourse.scoreType(), request);
 
         int difference = studentDeviation - desiredCourse.deviationValue();
 
         return new SchoolJudgementResult(
-                desiredSchool.name(),
-                desiredCourse.department(),
-                desiredCourse.courseName(),
-                "",
-                desiredSchool.schoolCategory(),
-                toJudgement(difference),
-                desiredCourse.scoreType(),
-                studentDeviation,
-                desiredCourse.deviationValue(),
-                difference
+            desiredSchool.name(),
+            desiredCourse.department(),
+            desiredCourse.courseName(),
+            "",
+            desiredSchool.schoolCategory(),
+            toJudgement(difference),
+            desiredCourse.scoreType(),
+            studentDeviation,
+            desiredCourse.deviationValue(),
+            difference
         );
     }
 
+    private int resolveStudentDeviation(ScoreType scoreType, JudgementRequest request) {
+        if (scoreType == ScoreType.THREE_SUBJECT) {
+            return request.saitamaDeviationThree() != null
+                    ? request.saitamaDeviationThree()
+                    : request.threeSubjectDeviation();
+        }
+        return request.saitamaDeviationFive() != null
+                ? request.saitamaDeviationFive()
+                : request.fiveSubjectDeviation();
+    }
+
     private String toJudgement(int difference) {
-        if (difference >= 2) {
+        if (difference >= 3) {
             return "A";
         }
-        if (difference >= 0) {
+        if (difference >= -2) {
             return "B";
         }
-        if (difference >= -2) {
+        if (difference >= -5) {
             return "C";
         }
-        if (difference >= -4) {
-            return "D";
-        }
-        return "E";
+        return "D";
     }
 }

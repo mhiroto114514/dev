@@ -22,6 +22,12 @@ public class CourseController {
                         .toList(),
                 schoolRepository.findCoursesByCategory(SchoolCategory.PRIVATE).stream()
                         .map(this::toSummary)
+                        .toList(),
+                schoolRepository.findCoursesByCategory(SchoolCategory.NATIONAL).stream()
+                        .map(this::toSummary)
+                        .toList(),
+                schoolRepository.findCoursesByCategory(SchoolCategory.KOSEN).stream()
+                        .map(this::toSummary)
                         .toList()
         );
     }

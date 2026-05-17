@@ -22,6 +22,12 @@ public class SchoolController {
                         .toList(),
                 schoolRepository.findSchoolsByCategory(SchoolCategory.PRIVATE).stream()
                         .map(this::toSummary)
+                        .toList(),
+                schoolRepository.findSchoolsByCategory(SchoolCategory.NATIONAL).stream()
+                        .map(this::toSummary)
+                        .toList(),
+                schoolRepository.findSchoolsByCategory(SchoolCategory.KOSEN).stream()
+                        .map(this::toSummary)
                         .toList()
         );
     }
