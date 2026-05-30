@@ -85,14 +85,69 @@ public class JudgementService {
     }
 
     private int resolveStudentDeviation(ScoreType scoreType, JudgementRequest request) {
+        Integer threeSubjectAverage = average(
+                request.japaneseDeviation(),
+                request.mathDeviation(),
+                request.englishDeviation()
+        );
+        Integer fiveSubjectAverage = average(
+                request.japaneseDeviation(),
+                request.mathDeviation(),
+                request.englishDeviation(),
+                request.scienceDeviation(),
+                request.socialstudiesDeviation()
+        );
+
+        Integer selected;
         if (scoreType == ScoreType.THREE_SUBJECT) {
-            return request.saitamaDeviationThree() != null
-                    ? request.saitamaDeviationThree()
-                    : request.threeSubjectDeviation();
+            selected = firstNonNull(
+                    request.saitamaDeviationThree(),
+                    request.threeSubjectDeviation(),
+                    threeSubjectAverage,
+                    request.saitamaDeviationFive(),
+                    request.fiveSubjectDeviation(),
+                    fiveSubjectAverage
+            );
+        } else {
+            selected = firstNonNull(
+                    request.saitamaDeviationFive(),
+                    request.fiveSubjectDeviation(),
+                    fiveSubjectAverage,
+                    request.saitamaDeviationThree(),
+                    request.threeSubjectDeviation(),
+                    threeSubjectAverage
+            );
         }
-        return request.saitamaDeviationFive() != null
-                ? request.saitamaDeviationFive()
-                : request.fiveSubjectDeviation();
+
+        if (selected == null) {
+            throw new IllegalArgumentException("No deviation score is available for judgement.");
+        }
+        return selected;
+    }
+
+    @SafeVarargs
+    private static <T> T firstNonNull(T... values) {
+        for (T value : values) {
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private Integer average(Integer... values) {
+        int sum = 0;
+        int count = 0;
+        for (Integer value : values) {
+            if (value != null) {
+                sum += value;
+                count++;
+            }
+        }
+        if (count == 0) {
+            return null;
+        }
+        return (int) Math.round((double) sum / count);
     }
 
     private String toJudgement(int difference) {

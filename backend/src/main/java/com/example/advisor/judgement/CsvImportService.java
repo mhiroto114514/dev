@@ -25,7 +25,7 @@ public class CsvImportService {
     @Transactional
     public CsvImportResponse importAndJudge(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("CSVファイルを選択してください。");
+            throw new IllegalArgumentException("Please select a CSV file.");
         }
 
         List<StudentLedgerResult> ledgers = new ArrayList<>();
@@ -34,7 +34,7 @@ public class CsvImportService {
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             String headerLine = reader.readLine();
             if (headerLine == null || headerLine.isBlank()) {
-                throw new IllegalArgumentException("CSVヘッダーが見つかりません。");
+                throw new IllegalArgumentException("CSV header is missing.");
             }
 
             Map<String, Integer> headerIndex = toHeaderIndex(headerLine);
@@ -48,11 +48,11 @@ public class CsvImportService {
                 ledgers.add(parseAndJudgeLine(line, lineNumber, headerIndex));
             }
         } catch (IOException ex) {
-            throw new IllegalArgumentException("CSVの読み込みに失敗しました。");
+            throw new IllegalArgumentException("Failed to read CSV file.");
         }
 
         if (ledgers.isEmpty()) {
-            throw new IllegalArgumentException("CSVに取り込み対象データがありません。");
+            throw new IllegalArgumentException("No data rows were found in CSV.");
         }
 
         return new CsvImportResponse(ledgers);
@@ -60,61 +60,66 @@ public class CsvImportService {
 
     private StudentLedgerResult parseAndJudgeLine(String line, int lineNumber, Map<String, Integer> headerIndex) {
         String[] cells = line.split(",", -1);
-        String studentName = getCell(cells, headerIndex, lineNumber, "name");
-        int studentCode = parseInt(getCell(cells, headerIndex, lineNumber, "student_id"), lineNumber, "student_id");
-        int times = parseInt(getCell(cells, headerIndex, lineNumber, "times"), lineNumber, "times");
-        int japanese = parseInt(getCell(cells, headerIndex, lineNumber, "japanese"), lineNumber, "japanese");
-        int math = parseInt(getCell(cells, headerIndex, lineNumber, "math"), lineNumber, "math");
-        int english = parseInt(getCell(cells, headerIndex, lineNumber, "english"), lineNumber, "english");
-        int science = parseInt(getCell(cells, headerIndex, lineNumber, "science"), lineNumber, "science");
-        int socialstudies = parseInt(
-                getCell(cells, headerIndex, lineNumber, "socialstudies", "socialscience"),
+        String studentName = getRequiredCell(cells, headerIndex, lineNumber, "name");
+        int studentCode = parseInt(getRequiredCell(cells, headerIndex, lineNumber, "student_id"), lineNumber, "student_id");
+        int times = parseInt(getRequiredCell(cells, headerIndex, lineNumber, "times"), lineNumber, "times");
+        int japanese = parseInt(getRequiredCell(cells, headerIndex, lineNumber, "japanese"), lineNumber, "japanese");
+        int math = parseInt(getRequiredCell(cells, headerIndex, lineNumber, "math"), lineNumber, "math");
+        int english = parseInt(getRequiredCell(cells, headerIndex, lineNumber, "english"), lineNumber, "english");
+
+        Integer science = parseNullableInt(
+                getOptionalCellIfPresent(cells, headerIndex, "science"),
+                lineNumber,
+                "science"
+        );
+        Integer socialstudies = parseNullableInt(
+                getOptionalCellIfPresent(cells, headerIndex, "socialstudies", "socialscience"),
                 lineNumber,
                 "socialstudies"
         );
 
         int deviationJapanese = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "deviation_japanese"),
+                getRequiredCell(cells, headerIndex, lineNumber, "deviation_japanese"),
                 lineNumber,
                 "deviation_japanese"
         );
         int deviationMath = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "deviation_math"),
+                getRequiredCell(cells, headerIndex, lineNumber, "deviation_math"),
                 lineNumber,
                 "deviation_math"
         );
         int deviationEnglish = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "deviation_english"),
+                getRequiredCell(cells, headerIndex, lineNumber, "deviation_english"),
                 lineNumber,
                 "deviation_english"
         );
-        int deviationScience = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "deviation_science"),
+        Integer deviationScience = parseNullableRoundedInt(
+                getOptionalCellIfPresent(cells, headerIndex, "deviation_science"),
                 lineNumber,
                 "deviation_science"
         );
-        int deviationSocialstudies = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "deviation_socialstudies", "deviation_socialscience"),
+        Integer deviationSocialstudies = parseNullableRoundedInt(
+                getOptionalCellIfPresent(cells, headerIndex, "deviation_socialstudies", "deviation_socialscience"),
                 lineNumber,
                 "deviation_socialstudies"
         );
         int deviationThree = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "deviation_three"),
+                getRequiredCell(cells, headerIndex, lineNumber, "deviation_three"),
                 lineNumber,
                 "deviation_three"
         );
-        int deviationFive = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "deviation_five"),
+        Integer deviationFive = parseNullableRoundedInt(
+                getOptionalCellIfPresent(cells, headerIndex, "deviation_five"),
                 lineNumber,
                 "deviation_five"
         );
-        int saitamaDeviationThree = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "saitama_deviation_three"),
+        Integer saitamaDeviationThree = parseNullableRoundedInt(
+                getOptionalCellIfPresent(cells, headerIndex, "saitama_deviation_three"),
                 lineNumber,
                 "saitama_deviation_three"
         );
-        int saitamaDeviationFive = parseRoundedInt(
-                getCell(cells, headerIndex, lineNumber, "saitama_deviation_five"),
+        Integer saitamaDeviationFive = parseNullableRoundedInt(
+                getOptionalCellIfPresent(cells, headerIndex, "saitama_deviation_five"),
                 lineNumber,
                 "saitama_deviation_five"
         );
@@ -125,7 +130,7 @@ public class CsvImportService {
         appendCourseCode(desiredCourseCodes, getOptionalCell(cells, headerIndex, "third_choice"), lineNumber, "third_choice");
 
         if (desiredCourseCodes.isEmpty()) {
-            throw new IllegalArgumentException("CSV " + lineNumber + "行目: 志望校を1校以上指定してください。");
+            throw new IllegalArgumentException("CSV line " + lineNumber + ": at least one school choice is required.");
         }
 
         JudgementRequest request = new JudgementRequest(
@@ -183,25 +188,18 @@ public class CsvImportService {
         return index;
     }
 
-    private String getCell(String[] cells, Map<String, Integer> headerIndex, int lineNumber, String... names) {
+    private String getRequiredCell(String[] cells, Map<String, Integer> headerIndex, int lineNumber, String... names) {
         String value = getOptionalCell(cells, headerIndex, names);
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("CSV " + lineNumber + "行目: " + names[0] + " が空です。");
+            throw new IllegalArgumentException("CSV line " + lineNumber + ": " + names[0] + " is required.");
         }
         return value;
     }
 
     private String getOptionalCell(String[] cells, Map<String, Integer> headerIndex, String... names) {
-        Integer idx = null;
-        for (String name : names) {
-            Integer candidate = headerIndex.get(name.toLowerCase());
-            if (candidate != null) {
-                idx = candidate;
-                break;
-            }
-        }
+        Integer idx = resolveHeaderIndex(headerIndex, names);
         if (idx == null) {
-            throw new IllegalArgumentException("CSVヘッダーに " + names[0] + " がありません。");
+            throw new IllegalArgumentException("CSV header is missing column: " + names[0]);
         }
         if (idx >= cells.length) {
             return "";
@@ -209,11 +207,30 @@ public class CsvImportService {
         return cells[idx].trim();
     }
 
+    private String getOptionalCellIfPresent(String[] cells, Map<String, Integer> headerIndex, String... names) {
+        Integer idx = resolveHeaderIndex(headerIndex, names);
+        if (idx == null || idx >= cells.length) {
+            return null;
+        }
+        String value = cells[idx].trim();
+        return value.isBlank() ? null : value;
+    }
+
+    private Integer resolveHeaderIndex(Map<String, Integer> headerIndex, String... names) {
+        for (String name : names) {
+            Integer candidate = headerIndex.get(name.toLowerCase());
+            if (candidate != null) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
     private int parseInt(String raw, int lineNumber, String column) {
         try {
             return Integer.parseInt(raw.trim());
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("CSV " + lineNumber + "行目: " + column + " の値が不正です。");
+            throw new IllegalArgumentException("CSV line " + lineNumber + ": invalid integer in " + column);
         }
     }
 
@@ -221,8 +238,22 @@ public class CsvImportService {
         try {
             return (int) Math.round(Double.parseDouble(raw.trim()));
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("CSV " + lineNumber + "行目: " + column + " の値が不正です。");
+            throw new IllegalArgumentException("CSV line " + lineNumber + ": invalid number in " + column);
         }
+    }
+
+    private Integer parseNullableInt(String raw, int lineNumber, String column) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return parseInt(raw, lineNumber, column);
+    }
+
+    private Integer parseNullableRoundedInt(String raw, int lineNumber, String column) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return parseRoundedInt(raw, lineNumber, column);
     }
 
     private void appendCourseCode(List<String> desiredCourseCodes, String raw, int lineNumber, String column) {

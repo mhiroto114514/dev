@@ -15,17 +15,17 @@ public record JudgementRequest(
         @NotNull @Min(0) @Max(100) Integer japaneseScore,
         @NotNull @Min(0) @Max(100) Integer mathScore,
         @NotNull @Min(0) @Max(100) Integer englishScore,
-        @NotNull @Min(0) @Max(100) Integer scienceScore,
+        @Min(0) @Max(100) Integer scienceScore,
         @JsonAlias("socialscienceScore")
-        @NotNull @Min(0) @Max(100) Integer socialstudiesScore,
+        @Min(0) @Max(100) Integer socialstudiesScore,
         @NotNull @Min(20) @Max(90) Integer japaneseDeviation,
         @NotNull @Min(20) @Max(90) Integer mathDeviation,
         @NotNull @Min(20) @Max(90) Integer englishDeviation,
-        @NotNull @Min(20) @Max(90) Integer scienceDeviation,
+        @Min(20) @Max(90) Integer scienceDeviation,
         @JsonAlias("socialscienceDeviation")
-        @NotNull @Min(20) @Max(90) Integer socialstudiesDeviation,
+        @Min(20) @Max(90) Integer socialstudiesDeviation,
         @NotNull @Min(20) @Max(90) Integer threeSubjectDeviation,
-        @NotNull @Min(20) @Max(90) Integer fiveSubjectDeviation,
+        @Min(20) @Max(90) Integer fiveSubjectDeviation,
         Integer saitamaDeviationThree,
         Integer saitamaDeviationFive,
         @NotNull @Size(max = 3) List<String> desiredCourseCodes
