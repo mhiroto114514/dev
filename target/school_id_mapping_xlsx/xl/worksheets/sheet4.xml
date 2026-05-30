@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <dimension ref="A1:D7"/>
+  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
+  <sheetFormatPr defaultRowHeight="15"/>
+  <cols>
+    <col min="1" max="1" width="8" customWidth="1"/>
+    <col min="2" max="2" width="50" customWidth="1"/>
+    <col min="3" max="3" width="10" customWidth="1"/>
+    <col min="4" max="4" width="12" customWidth="1"/>
+  </cols>
+  <sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>ID</t></is></c><c r="B1" t="inlineStr"><is><t>学校名</t></is></c><c r="C1" t="inlineStr"><is><t>偏差値</t></is></c><c r="D1" t="inlineStr"><is><t>区分</t></is></c></row><row r="2"><c r="A2"><v>415</v></c><c r="B2" t="inlineStr"><is><t>筑波大学附属駒場（普通）</t></is></c><c r="C2"><v>74</v></c><c r="D2" t="inlineStr"><is><t>国立</t></is></c></row><row r="3"><c r="A3"><v>417</v></c><c r="B3" t="inlineStr"><is><t>筑波大附属（普通）</t></is></c><c r="C3"><v>73</v></c><c r="D3" t="inlineStr"><is><t>国立</t></is></c></row><row r="4"><c r="A4"><v>419</v></c><c r="B4" t="inlineStr"><is><t>お茶の水女子大附（普通）</t></is></c><c r="C4"><v>72</v></c><c r="D4" t="inlineStr"><is><t>国立</t></is></c></row><row r="5"><c r="A5"><v>425</v></c><c r="B5" t="inlineStr"><is><t>東京学芸大附（普通）</t></is></c><c r="C5"><v>71</v></c><c r="D5" t="inlineStr"><is><t>国立</t></is></c></row><row r="6"><c r="A6"><v>447</v></c><c r="B6" t="inlineStr"><is><t>東京科学大附属科学技術（科学・技術）</t></is></c><c r="C6"><v>63</v></c><c r="D6" t="inlineStr"><is><t>国立</t></is></c></row><row r="7"><c r="A7"><v>455</v></c><c r="B7" t="inlineStr"><is><t>筑波大附属坂戸（総合科学）</t></is></c><c r="C7"><v>57</v></c><c r="D7" t="inlineStr"><is><t>国立</t></is></c></row></sheetData>
+</worksheet>

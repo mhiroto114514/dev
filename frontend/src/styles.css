@@ -299,6 +299,16 @@ body {
   gap: 20px;
 }
 
+.result-title {
+  margin-top: 0;
+}
+
+.csv-file-name {
+  margin: 0;
+  color: #475569;
+  font-weight: 700;
+}
+
 .print-score-summary {
   display: none;
 }
@@ -336,6 +346,18 @@ body {
   border-radius: 12px;
   background: #fff;
   font-weight: 700;
+}
+
+.student-ledger {
+  display: grid;
+  gap: 12px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.student-ledger:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .school-result-block {
@@ -503,9 +525,9 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  background: #0f766e;
-  border: 2px solid #ccfbf1;
-  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.18);
+  background: #f97316;
+  border: 2px solid #ffedd5;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
 }
 
 .axis-diamond {
@@ -681,6 +703,23 @@ body {
     padding-bottom: 1.2mm;
     border-bottom: 1px solid #000;
     font-size: 12pt;
+  }
+
+  .result-title {
+    display: none !important;
+  }
+
+  .student-ledger {
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .student-ledger:not(:last-child) {
+    break-after: page;
+    page-break-after: always;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
   }
 
   .ledger-student-head {
@@ -999,8 +1038,8 @@ body {
     width: 10px !important;
     height: 10px !important;
     border-radius: 999px !important;
-    background: #0f766e !important;
-    border: 2px solid #ccfbf1 !important;
+    background: #f97316 !important;
+    border: 2px solid #ffedd5 !important;
   }
 
   .axis-diamond {

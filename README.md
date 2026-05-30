@@ -294,4 +294,11 @@ TRUNCATE TABLE result, student, school RESTART IDENTITY CASCADE;
 
 backend / frontend の各ターミナルで `Ctrl + C` を押します。
 
+## 12. DB初期化方法
 
+```powershell
+drop schema public cascade;
+create schema public;
+\i backend/src/main/resources/schema.sql
+\i backend/src/main/resources/data.sql
+```

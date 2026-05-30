@@ -473,31 +473,3 @@ VALUES
                                                         ('佐野清澄（普通）', 39, 'PRIVATE'),
                                                         ('佐野清澄（生活デザイン）', 39, 'PRIVATE'),
                                                         ('青藍泰斗（普通）', 39, 'PRIVATE');
--- 1. 生徒データの挿入
-INSERT INTO student (student_id, name)
-VALUES (2024001, '山田 太郎'),
-       (2024002, '佐藤 花子'),
-       (2024003, '鈴木 一郎')
-ON CONFLICT (student_id) DO UPDATE
-SET name = EXCLUDED.name;
-
--- 2. 成績データの挿入
--- student_id は studentテーブルのid（1,2,3）
--- 志望校（first_choice等）は schoolテーブルのidを指定
-INSERT INTO result (student_id, times,
-                    japanese, math, english, science, socialstudies,
-                    deviation_japanese, deviation_math, deviation_english, deviation_science, deviation_socialstudies,
-                    deviation_three, deviation_five,
-                    saitama_deviation_three, saitama_deviation_five,
-                    first_choice, second_choice, third_choice)
-VALUES
--- 山田太郎（id:1） 第1回テスト
-(1, 1, 85, 90, 88, 92, 80, 65, 70, 68, 72, 60, 68, 67, 74, 73, 1, 2, 3),
--- 山田太郎（id:1） 第2回テスト（成績アップ）
-(1, 2, 88, 95, 90, 95, 85, 68, 74, 70, 75, 65, 71, 70, 76, 76, 1, 2, 3),
-
--- 佐藤花子（id:2） 第1回テスト
-(2, 1, 60, 55, 65, 70, 68, 50, 48, 52, 55, 54, 50, 52, 56, 58, 10, 11, 12),
-
--- 鈴木一郎（id:3） 第1回テスト（理数特化）
-(3, 1, 70, 95, 75, 88, 65, 55, 75, 58, 68, 52, 63, 62, 69, 68, 4, 8, 15);
