@@ -78,47 +78,47 @@ public class CsvImportService {
                 "socialstudies"
         );
 
-        int deviationJapanese = parseRoundedInt(
+        double deviationJapanese = parseDeviation(
                 getRequiredCell(cells, headerIndex, lineNumber, "deviation_japanese"),
                 lineNumber,
                 "deviation_japanese"
         );
-        int deviationMath = parseRoundedInt(
+        double deviationMath = parseDeviation(
                 getRequiredCell(cells, headerIndex, lineNumber, "deviation_math"),
                 lineNumber,
                 "deviation_math"
         );
-        int deviationEnglish = parseRoundedInt(
+        double deviationEnglish = parseDeviation(
                 getRequiredCell(cells, headerIndex, lineNumber, "deviation_english"),
                 lineNumber,
                 "deviation_english"
         );
-        Integer deviationScience = parseNullableRoundedInt(
+        Double deviationScience = parseNullableDeviation(
                 getOptionalCellIfPresent(cells, headerIndex, "deviation_science"),
                 lineNumber,
                 "deviation_science"
         );
-        Integer deviationSocialstudies = parseNullableRoundedInt(
+        Double deviationSocialstudies = parseNullableDeviation(
                 getOptionalCellIfPresent(cells, headerIndex, "deviation_socialstudies", "deviation_socialscience"),
                 lineNumber,
                 "deviation_socialstudies"
         );
-        int deviationThree = parseRoundedInt(
+        double deviationThree = parseDeviation(
                 getRequiredCell(cells, headerIndex, lineNumber, "deviation_three"),
                 lineNumber,
                 "deviation_three"
         );
-        Integer deviationFive = parseNullableRoundedInt(
+        Double deviationFive = parseNullableDeviation(
                 getOptionalCellIfPresent(cells, headerIndex, "deviation_five"),
                 lineNumber,
                 "deviation_five"
         );
-        Integer saitamaDeviationThree = parseNullableRoundedInt(
+        Double saitamaDeviationThree = parseNullableDeviation(
                 getOptionalCellIfPresent(cells, headerIndex, "saitama_deviation_three"),
                 lineNumber,
                 "saitama_deviation_three"
         );
-        Integer saitamaDeviationFive = parseNullableRoundedInt(
+        Double saitamaDeviationFive = parseNullableDeviation(
                 getOptionalCellIfPresent(cells, headerIndex, "saitama_deviation_five"),
                 lineNumber,
                 "saitama_deviation_five"
@@ -234,9 +234,9 @@ public class CsvImportService {
         }
     }
 
-    private int parseRoundedInt(String raw, int lineNumber, String column) {
+    private double parseDeviation(String raw, int lineNumber, String column) {
         try {
-            return (int) Math.round(Double.parseDouble(raw.trim()));
+            return roundToOneDecimal(Double.parseDouble(raw.trim()));
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("CSV line " + lineNumber + ": invalid number in " + column);
         }
@@ -249,11 +249,15 @@ public class CsvImportService {
         return parseInt(raw, lineNumber, column);
     }
 
-    private Integer parseNullableRoundedInt(String raw, int lineNumber, String column) {
+    private Double parseNullableDeviation(String raw, int lineNumber, String column) {
         if (raw == null || raw.isBlank()) {
             return null;
         }
-        return parseRoundedInt(raw, lineNumber, column);
+        return parseDeviation(raw, lineNumber, column);
+    }
+
+    private double roundToOneDecimal(double value) {
+        return Math.round(value * 10.0) / 10.0;
     }
 
     private void appendCourseCode(List<String> desiredCourseCodes, String raw, int lineNumber, String column) {

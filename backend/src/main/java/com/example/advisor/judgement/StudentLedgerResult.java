@@ -11,16 +11,15 @@ public record StudentLedgerResult(
         Integer englishScore,
         Integer scienceScore,
         Integer socialstudiesScore,
-        Integer japaneseDeviation,
-        Integer mathDeviation,
-        Integer englishDeviation,
-        Integer scienceDeviation,
-        Integer socialstudiesDeviation,
-        Integer threeSubjectDeviation,
-        Integer fiveSubjectDeviation,
-        Integer saitamaDeviationThree,
-        Integer saitamaDeviationFive,
+        Double japaneseDeviation,
+        Double mathDeviation,
+        Double englishDeviation,
+        Double scienceDeviation,
+        Double socialstudiesDeviation,
+        Double threeSubjectDeviation,
+        Double fiveSubjectDeviation,
+        Double saitamaDeviationThree,
+        Double saitamaDeviationFive,
         List<SchoolJudgementResult> results
 ) {
 }
-

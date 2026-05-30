@@ -11,8 +11,8 @@ public record SchoolJudgementResult(
         SchoolCategory schoolCategory,
         String judgement,
         ScoreType usedScoreType,
-        int studentDeviationValue,
-        int targetDeviationValue,
-        int difference
+        double studentDeviationValue,
+        double targetDeviationValue,
+        double difference
 ) {
 }

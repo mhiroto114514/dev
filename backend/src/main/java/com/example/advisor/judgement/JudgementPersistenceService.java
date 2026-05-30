@@ -1,5 +1,6 @@
 package com.example.advisor.judgement;
 
+import com.example.advisor.db.DeviationSchemaMigrationService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,14 +14,20 @@ import java.util.stream.Collectors;
 public class JudgementPersistenceService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final DeviationSchemaMigrationService deviationSchemaMigrationService;
     private volatile ResultTableColumns resultTableColumns;
 
-    public JudgementPersistenceService(JdbcTemplate jdbcTemplate) {
+    public JudgementPersistenceService(
+            JdbcTemplate jdbcTemplate,
+            DeviationSchemaMigrationService deviationSchemaMigrationService
+    ) {
         this.jdbcTemplate = jdbcTemplate;
+        this.deviationSchemaMigrationService = deviationSchemaMigrationService;
     }
 
     @Transactional
     public void save(JudgementRequest request, Integer firstChoice, Integer secondChoice, Integer thirdChoice) {
+        deviationSchemaMigrationService.ensureMigrated();
         Integer studentPk = jdbcTemplate.query(
                 "SELECT id FROM student WHERE student_id = ?",
                 ps -> ps.setInt(1, request.studentCode()),

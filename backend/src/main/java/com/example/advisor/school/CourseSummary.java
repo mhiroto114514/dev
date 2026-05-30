@@ -8,7 +8,7 @@ public record CourseSummary(
         String courseName,
         SchoolCategory schoolCategory,
         ScoreType scoreType,
-        int deviationValue,
+        double deviationValue,
         String area
 ) {
 }

@@ -1,6 +1,8 @@
 package com.example.advisor.judgement;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -18,16 +20,16 @@ public record JudgementRequest(
         @Min(0) @Max(100) Integer scienceScore,
         @JsonAlias("socialscienceScore")
         @Min(0) @Max(100) Integer socialstudiesScore,
-        @NotNull @Min(20) @Max(90) Integer japaneseDeviation,
-        @NotNull @Min(20) @Max(90) Integer mathDeviation,
-        @NotNull @Min(20) @Max(90) Integer englishDeviation,
-        @Min(20) @Max(90) Integer scienceDeviation,
+        @NotNull @DecimalMin("20.0") @DecimalMax("90.0") Double japaneseDeviation,
+        @NotNull @DecimalMin("20.0") @DecimalMax("90.0") Double mathDeviation,
+        @NotNull @DecimalMin("20.0") @DecimalMax("90.0") Double englishDeviation,
+        @DecimalMin("20.0") @DecimalMax("90.0") Double scienceDeviation,
         @JsonAlias("socialscienceDeviation")
-        @Min(20) @Max(90) Integer socialstudiesDeviation,
-        @NotNull @Min(20) @Max(90) Integer threeSubjectDeviation,
-        @Min(20) @Max(90) Integer fiveSubjectDeviation,
-        Integer saitamaDeviationThree,
-        Integer saitamaDeviationFive,
+        @DecimalMin("20.0") @DecimalMax("90.0") Double socialstudiesDeviation,
+        @NotNull @DecimalMin("20.0") @DecimalMax("90.0") Double threeSubjectDeviation,
+        @DecimalMin("20.0") @DecimalMax("90.0") Double fiveSubjectDeviation,
+        Double saitamaDeviationThree,
+        Double saitamaDeviationFive,
         @NotNull @Size(max = 3) List<String> desiredCourseCodes
 ) {
 }

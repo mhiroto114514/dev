@@ -6,6 +6,6 @@ public record Course(
         String department,
         String courseName,
         ScoreType scoreType,
-        int deviationValue
+        double deviationValue
 ) {
 }

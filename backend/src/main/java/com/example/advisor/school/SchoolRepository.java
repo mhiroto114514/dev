@@ -1,5 +1,6 @@
 package com.example.advisor.school;
 
+import com.example.advisor.db.DeviationSchemaMigrationService;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -12,12 +13,18 @@ public class SchoolRepository {
     private static final String DEFAULT_DEPARTMENT = "普通科";
 
     private final JdbcTemplate jdbcTemplate;
+    private final DeviationSchemaMigrationService deviationSchemaMigrationService;
 
-    public SchoolRepository(JdbcTemplate jdbcTemplate) {
+    public SchoolRepository(
+            JdbcTemplate jdbcTemplate,
+            DeviationSchemaMigrationService deviationSchemaMigrationService
+    ) {
         this.jdbcTemplate = jdbcTemplate;
+        this.deviationSchemaMigrationService = deviationSchemaMigrationService;
     }
 
     public List<School> findAllSchools() {
+        deviationSchemaMigrationService.ensureMigrated();
         String sql = "SELECT id, name, school_category FROM school ORDER BY deviation DESC, id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new School(
                 toSchoolCode(rs.getInt("id")),
@@ -27,6 +34,7 @@ public class SchoolRepository {
     }
 
     public List<School> findSchoolsByCategory(SchoolCategory schoolCategory) {
+        deviationSchemaMigrationService.ensureMigrated();
         String sql = "SELECT id, name, school_category FROM school WHERE school_category = ? ORDER BY deviation DESC, id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new School(
                         toSchoolCode(rs.getInt("id")),
@@ -38,6 +46,7 @@ public class SchoolRepository {
     }
 
     public Optional<School> findSchoolByCode(String schoolCode) {
+        deviationSchemaMigrationService.ensureMigrated();
         String sql = "SELECT id, name, school_category FROM school WHERE id = ?";
         List<School> schools = jdbcTemplate.query(sql, (rs, rowNum) -> new School(
                         toSchoolCode(rs.getInt("id")),
@@ -50,39 +59,42 @@ public class SchoolRepository {
     }
 
     public List<Course> findAllCourses() {
+        deviationSchemaMigrationService.ensureMigrated();
         String sql = "SELECT id, name, deviation FROM school ORDER BY deviation DESC, id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(
                 rs.getInt("id"),
                 rs.getString("name"),
-                rs.getInt("deviation")
+                rs.getDouble("deviation")
         ));
     }
 
     public List<Course> findCoursesByCategory(SchoolCategory schoolCategory) {
+        deviationSchemaMigrationService.ensureMigrated();
         String sql = "SELECT id, name, deviation FROM school WHERE school_category = ? ORDER BY deviation DESC, id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(
                         rs.getInt("id"),
                         rs.getString("name"),
-                        rs.getInt("deviation")
+                        rs.getDouble("deviation")
                 ),
                 schoolCategory.name()
         );
     }
 
     public Optional<Course> findCourseByCode(String courseCode) {
+        deviationSchemaMigrationService.ensureMigrated();
         String schoolCode = fromCourseCode(courseCode);
         String sql = "SELECT id, name, deviation FROM school WHERE id = ?";
         List<Course> courses = jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(
                         rs.getInt("id"),
                         rs.getString("name"),
-                        rs.getInt("deviation")
+                        rs.getDouble("deviation")
                 ),
                 fromSchoolCode(schoolCode)
         );
         return courses.stream().findFirst();
     }
 
-    private Course toCourse(int schoolId, String schoolName, int deviation) {
+    private Course toCourse(int schoolId, String schoolName, double deviation) {
         return new Course(
                 toCourseCode(schoolId),
                 toSchoolCode(schoolId),
@@ -114,14 +126,14 @@ public class SchoolRepository {
 
     private int fromSchoolCode(String schoolCode) {
         if (schoolCode == null || !schoolCode.startsWith("school-")) {
-            throw new IllegalArgumentException("学校コードの形式が不正です。");
+            throw new IllegalArgumentException("School code format is invalid.");
         }
         return Integer.parseInt(schoolCode.substring("school-".length()));
     }
 
     private String fromCourseCode(String courseCode) {
         if (courseCode == null || !courseCode.startsWith("course-")) {
-            throw new IllegalArgumentException("コースコードの形式が不正です。");
+            throw new IllegalArgumentException("Course code format is invalid.");
         }
         return "school-" + Integer.parseInt(courseCode.substring("course-".length()));
     }

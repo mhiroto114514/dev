@@ -66,9 +66,9 @@ public class JudgementService {
         School desiredSchool = schoolRepository.findSchoolByCode(desiredCourse.schoolCode())
             .orElseThrow();
 
-        int studentDeviation = resolveStudentDeviation(desiredCourse.scoreType(), request);
+        double studentDeviation = resolveStudentDeviation(desiredCourse.scoreType(), request);
 
-        int difference = studentDeviation - desiredCourse.deviationValue();
+        double difference = studentDeviation - desiredCourse.deviationValue();
 
         return new SchoolJudgementResult(
             desiredSchool.name(),
@@ -84,13 +84,13 @@ public class JudgementService {
         );
     }
 
-    private int resolveStudentDeviation(ScoreType scoreType, JudgementRequest request) {
-        Integer threeSubjectAverage = average(
+    private double resolveStudentDeviation(ScoreType scoreType, JudgementRequest request) {
+        Double threeSubjectAverage = average(
                 request.japaneseDeviation(),
                 request.mathDeviation(),
                 request.englishDeviation()
         );
-        Integer fiveSubjectAverage = average(
+        Double fiveSubjectAverage = average(
                 request.japaneseDeviation(),
                 request.mathDeviation(),
                 request.englishDeviation(),
@@ -98,7 +98,7 @@ public class JudgementService {
                 request.socialstudiesDeviation()
         );
 
-        Integer selected;
+        Double selected;
         if (scoreType == ScoreType.THREE_SUBJECT) {
             selected = firstNonNull(
                     request.saitamaDeviationThree(),
@@ -135,10 +135,10 @@ public class JudgementService {
         return null;
     }
 
-    private Integer average(Integer... values) {
-        int sum = 0;
+    private Double average(Double... values) {
+        double sum = 0;
         int count = 0;
-        for (Integer value : values) {
+        for (Double value : values) {
             if (value != null) {
                 sum += value;
                 count++;
@@ -147,10 +147,10 @@ public class JudgementService {
         if (count == 0) {
             return null;
         }
-        return (int) Math.round((double) sum / count);
+        return sum / count;
     }
 
-    private String toJudgement(int difference) {
+    private String toJudgement(double difference) {
         if (difference >= 3) {
             return "A";
         }
