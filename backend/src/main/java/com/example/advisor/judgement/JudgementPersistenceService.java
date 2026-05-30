@@ -61,22 +61,21 @@ public class JudgementPersistenceService {
                 "deviation_three",
                 "deviation_five"
         ));
-        List<Object> params = new ArrayList<>(List.of(
-                studentPk,
-                request.times(),
-                request.japaneseScore(),
-                request.mathScore(),
-                request.englishScore(),
-                request.scienceScore(),
-                request.socialstudiesScore(),
-                request.japaneseDeviation(),
-                request.mathDeviation(),
-                request.englishDeviation(),
-                request.scienceDeviation(),
-                request.socialstudiesDeviation(),
-                request.threeSubjectDeviation(),
-                request.fiveSubjectDeviation()
-        ));
+        List<Object> params = new ArrayList<>();
+        params.add(studentPk);
+        params.add(request.times());
+        params.add(request.japaneseScore());
+        params.add(request.mathScore());
+        params.add(request.englishScore());
+        params.add(request.scienceScore());
+        params.add(request.socialstudiesScore());
+        params.add(request.japaneseDeviation());
+        params.add(request.mathDeviation());
+        params.add(request.englishDeviation());
+        params.add(request.scienceDeviation());
+        params.add(request.socialstudiesDeviation());
+        params.add(request.threeSubjectDeviation());
+        params.add(request.fiveSubjectDeviation());
 
         if (columns.hasSaitamaDeviationThree()) {
             insertColumns.add("saitama_deviation_three");

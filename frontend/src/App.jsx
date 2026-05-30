@@ -29,6 +29,19 @@ const text = {
   schoolName: '花咲スクール'
 };
 
+
+function toNullableNumber(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function formatDeviation(value) {
+  const number = toNullableNumber(value);
+  return number === null ? '-' : number.toFixed(1);
+}
 function App() {
   const [csvFile, setCsvFile] = useState(null);
   const [importResult, setImportResult] = useState(null);
@@ -143,7 +156,7 @@ function App() {
                               <h3>{entry.schoolName}</h3>
                               {shouldShowCourseLine && <p className="sub-meta">{entry.courseName}</p>}
                               <p className="sub-meta sub-meta-emphasis">
-                                {text.usedScore}: {scoreTypeLabels[entry.usedScoreType]} / {text.targetDev} {entry.targetDeviationValue}
+                                {text.usedScore}: {scoreTypeLabels[entry.usedScoreType]} / {text.targetDev} {formatDeviation(entry.targetDeviationValue)}
                               </p>
                             </div>
                             <div className={`badge badge-${entry.judgement}`}>
@@ -178,15 +191,32 @@ function App() {
 }
 
 function PrintScoreSummary({ ledger }) {
-  const japaneseScore = Number(ledger.japaneseScore) || 0;
-  const mathScore = Number(ledger.mathScore) || 0;
-  const englishScore = Number(ledger.englishScore) || 0;
-  const scienceScore = Number(ledger.scienceScore) || 0;
-  const socialstudiesScore = Number(ledger.socialstudiesScore) || 0;
+  const displayValue = (value) => (value === null || value === undefined ? '-' : value);
+
+  const japaneseScore = toNullableNumber(ledger.japaneseScore) ?? 0;
+  const mathScore = toNullableNumber(ledger.mathScore) ?? 0;
+  const englishScore = toNullableNumber(ledger.englishScore) ?? 0;
+  const scienceScore = toNullableNumber(ledger.scienceScore);
+  const socialstudiesScore = toNullableNumber(ledger.socialstudiesScore);
+
   const threeSubjectScore = japaneseScore + mathScore + englishScore;
-  const fiveSubjectScore = threeSubjectScore + scienceScore + socialstudiesScore;
-  const threeSubjectDeviation = Number(ledger.saitamaDeviationThree ?? ledger.threeSubjectDeviation) || 0;
-  const fiveSubjectDeviation = Number(ledger.saitamaDeviationFive ?? ledger.fiveSubjectDeviation) || 0;
+  const fiveSubjectScore = threeSubjectScore + (scienceScore ?? 0) + (socialstudiesScore ?? 0);
+
+  const japaneseDeviation = toNullableNumber(ledger.japaneseDeviation);
+  const mathDeviation = toNullableNumber(ledger.mathDeviation);
+  const englishDeviation = toNullableNumber(ledger.englishDeviation);
+  const scienceDeviation = toNullableNumber(ledger.scienceDeviation);
+  const socialstudiesDeviation = toNullableNumber(ledger.socialstudiesDeviation);
+  const threeSubjectDeviation = toNullableNumber(ledger.saitamaDeviationThree ?? ledger.threeSubjectDeviation);
+  const fiveSubjectDeviation = toNullableNumber(ledger.saitamaDeviationFive ?? ledger.fiveSubjectDeviation);
+
+  const hasFiveSubjects = [
+    scienceScore,
+    socialstudiesScore,
+    scienceDeviation,
+    socialstudiesDeviation,
+    fiveSubjectDeviation
+  ].some((value) => value !== null);
 
   return (
     <table className="print-score-summary" aria-label="得点と偏差値">
@@ -196,32 +226,44 @@ function PrintScoreSummary({ ledger }) {
           <th>国語</th>
           <th>数学</th>
           <th>英語</th>
-          <th>理科</th>
-          <th>社会</th>
+          {hasFiveSubjects && (
+            <>
+              <th>理科</th>
+              <th>社会</th>
+            </>
+          )}
           <th>3教科計</th>
-          <th>5教科計</th>
+          {hasFiveSubjects && <th>5教科計</th>}
         </tr>
       </thead>
       <tbody>
         <tr>
           <th>得点</th>
-          <td>{japaneseScore}</td>
-          <td>{mathScore}</td>
-          <td>{englishScore}</td>
-          <td>{scienceScore}</td>
-          <td>{socialstudiesScore}</td>
-          <td>{threeSubjectScore}</td>
-          <td>{fiveSubjectScore}</td>
+          <td>{displayValue(japaneseScore)}</td>
+          <td>{displayValue(mathScore)}</td>
+          <td>{displayValue(englishScore)}</td>
+          {hasFiveSubjects && (
+            <>
+              <td>{displayValue(scienceScore)}</td>
+              <td>{displayValue(socialstudiesScore)}</td>
+            </>
+          )}
+          <td>{displayValue(threeSubjectScore)}</td>
+          {hasFiveSubjects && <td>{displayValue(fiveSubjectScore)}</td>}
         </tr>
         <tr>
           <th>偏差値</th>
-          <td>{ledger.japaneseDeviation}</td>
-          <td>{ledger.mathDeviation}</td>
-          <td>{ledger.englishDeviation}</td>
-          <td>{ledger.scienceDeviation}</td>
-          <td>{ledger.socialstudiesDeviation}</td>
-          <td>{threeSubjectDeviation}</td>
-          <td>{fiveSubjectDeviation}</td>
+          <td>{formatDeviation(japaneseDeviation)}</td>
+          <td>{formatDeviation(mathDeviation)}</td>
+          <td>{formatDeviation(englishDeviation)}</td>
+          {hasFiveSubjects && (
+            <>
+              <td>{formatDeviation(scienceDeviation)}</td>
+              <td>{formatDeviation(socialstudiesDeviation)}</td>
+            </>
+          )}
+          <td>{formatDeviation(threeSubjectDeviation)}</td>
+          {hasFiveSubjects && <td>{formatDeviation(fiveSubjectDeviation)}</td>}
         </tr>
       </tbody>
     </table>
