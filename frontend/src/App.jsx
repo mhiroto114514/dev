@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useState} from 'react';
 
 const schoolCategoryLabels = {
   PUBLIC: '公立',
@@ -42,6 +42,7 @@ function formatDeviation(value) {
   const number = toNullableNumber(value);
   return number === null ? '-' : number.toFixed(1);
 }
+
 function App() {
   const [csvFile, setCsvFile] = useState(null);
   const [importResult, setImportResult] = useState(null);
@@ -124,7 +125,7 @@ function App() {
 
           {importResult && (
             <div className="result-stack">
-              <button onClick={() => window.print()} className="print-button" style={{ marginBottom: '20px' }}>
+              <button onClick={() => window.print()} className="print-button" style={{marginBottom: '20px'}}>
                 この結果を印刷する
               </button>
 
@@ -140,7 +141,7 @@ function App() {
                     <span>氏名: {ledger.studentName || '未登録'}</span>
                   </div>
 
-                  <PrintScoreSummary ledger={ledger} />
+                  <PrintScoreSummary ledger={ledger}/>
 
                   <div className="result-stack">
                     {ledger.results.map((entry, resultIndex) => {
@@ -149,10 +150,12 @@ function App() {
                         entry.courseName !== entry.schoolName &&
                         !entry.courseName.startsWith(entry.schoolName);
                       return (
-                        <div className="school-result-block" key={`${entry.schoolName}-${entry.courseName}-${resultIndex}`}>
+                        <div className="school-result-block"
+                             key={`${entry.schoolName}-${entry.courseName}-${resultIndex}`}>
                           <div className="judgement-card">
                             <div>
-                              <p className="meta">{schoolCategoryLabels[entry.schoolCategory] ?? entry.schoolCategory}</p>
+                              <p
+                                className="meta">{schoolCategoryLabels[entry.schoolCategory] ?? entry.schoolCategory}</p>
                               <h3>{entry.schoolName}</h3>
                               {shouldShowCourseLine && <p className="sub-meta">{entry.courseName}</p>}
                               <p className="sub-meta sub-meta-emphasis">
@@ -177,7 +180,8 @@ function App() {
 
                     <section className="print-notes">
                       <p>・グラフの見方: 横軸は偏差値です。丸はあなたの偏差値、ひし形は高校の基準偏差値を示します。</p>
-                      <p>・この結果は、過去の模擬試験データおよび実際の入試得点、通知表、面接は加味していません。</p>
+                      <p>・この結果は、過去の入試得点・模擬試験データを加味しています。</p>
+                      <p>・通知表の内容は加味していません。</p>
                     </section>
                   </div>
                 </article>
@@ -190,7 +194,7 @@ function App() {
   );
 }
 
-function PrintScoreSummary({ ledger }) {
+function PrintScoreSummary({ledger}) {
   const displayValue = (value) => (value === null || value === undefined ? '-' : value);
 
   const japaneseScore = toNullableNumber(ledger.japaneseScore) ?? 0;
@@ -221,71 +225,129 @@ function PrintScoreSummary({ ledger }) {
   return (
     <table className="print-score-summary" aria-label="得点と偏差値">
       <thead>
-        <tr>
-          <th />
-          <th>国語</th>
-          <th>数学</th>
-          <th>英語</th>
-          {hasFiveSubjects && (
-            <>
-              <th>理科</th>
-              <th>社会</th>
-            </>
-          )}
-          <th>3教科計</th>
-          {hasFiveSubjects && <th>5教科計</th>}
-        </tr>
+      <tr>
+        <th/>
+        <th>国語</th>
+        <th>数学</th>
+        <th>英語</th>
+        {hasFiveSubjects && (
+          <>
+            <th>理科</th>
+            <th>社会</th>
+          </>
+        )}
+        <th>3教科計</th>
+        {hasFiveSubjects && <th>5教科計</th>}
+      </tr>
       </thead>
       <tbody>
-        <tr>
-          <th>得点</th>
-          <td>{displayValue(japaneseScore)}</td>
-          <td>{displayValue(mathScore)}</td>
-          <td>{displayValue(englishScore)}</td>
-          {hasFiveSubjects && (
-            <>
-              <td>{displayValue(scienceScore)}</td>
-              <td>{displayValue(socialstudiesScore)}</td>
-            </>
-          )}
-          <td>{displayValue(threeSubjectScore)}</td>
-          {hasFiveSubjects && <td>{displayValue(fiveSubjectScore)}</td>}
-        </tr>
-        <tr>
-          <th>偏差値</th>
-          <td>{formatDeviation(japaneseDeviation)}</td>
-          <td>{formatDeviation(mathDeviation)}</td>
-          <td>{formatDeviation(englishDeviation)}</td>
-          {hasFiveSubjects && (
-            <>
-              <td>{formatDeviation(scienceDeviation)}</td>
-              <td>{formatDeviation(socialstudiesDeviation)}</td>
-            </>
-          )}
-          <td>{formatDeviation(threeSubjectDeviation)}</td>
-          {hasFiveSubjects && <td>{formatDeviation(fiveSubjectDeviation)}</td>}
-        </tr>
+      <tr>
+        <th>得点</th>
+        <td>{displayValue(japaneseScore)}</td>
+        <td>{displayValue(mathScore)}</td>
+        <td>{displayValue(englishScore)}</td>
+        {hasFiveSubjects && (
+          <>
+            <td>{displayValue(scienceScore)}</td>
+            <td>{displayValue(socialstudiesScore)}</td>
+          </>
+        )}
+        <td>{displayValue(threeSubjectScore)}</td>
+        {hasFiveSubjects && <td>{displayValue(fiveSubjectScore)}</td>}
+      </tr>
+      <tr>
+        <th>偏差値</th>
+        <td>{formatDeviation(japaneseDeviation)}</td>
+        <td>{formatDeviation(mathDeviation)}</td>
+        <td>{formatDeviation(englishDeviation)}</td>
+        {hasFiveSubjects && (
+          <>
+            <td>{formatDeviation(scienceDeviation)}</td>
+            <td>{formatDeviation(socialstudiesDeviation)}</td>
+          </>
+        )}
+        <td>{formatDeviation(threeSubjectDeviation)}</td>
+        {hasFiveSubjects && <td>{formatDeviation(fiveSubjectDeviation)}</td>}
+      </tr>
       </tbody>
     </table>
   );
 }
 
-function DeviationAxis({ studentValue, targetValue, min, max }) {
+function DeviationAxis({studentValue, targetValue, min, max}) {
   const clamp = (value) => Math.min(max, Math.max(min, value));
   const toPercent = (value) => ((clamp(value) - min) / (max - min)) * 100;
 
+  const ticks = [];
+  for (let i = min; i <= max; i += 5) {
+    ticks.push(i);
+  }
+
   return (
-    <div className="deviation-axis" aria-label="偏差値比較グラフ">
-      <div className="axis-track" />
-      <div className="axis-marker axis-marker-student" style={{ left: `${toPercent(studentValue)}%` }}>
-        <span className="axis-dot" />
-      </div>
-      <div className="axis-marker axis-marker-target" style={{ left: `${toPercent(targetValue)}%` }}>
-        <span className="axis-diamond" />
-      </div>
-      <div className="axis-scale">
-        <span>{min}</span>
-        <span>{max}</span>
+    <div className="deviation-axis" aria-label="偏差値比較グラフ" style={{paddingBottom: '38px'}}>
+      {/* 基準となる100%幅の透明な箱 */}
+      <div style={{position: 'relative', width: '100%', height: '4px'}}>
+
+        {/* ① バー本体 */}
+        <div className="axis-track" style={{width: '100%', margin: 0}}/>
+
+        {/* ② 生徒と目標の点（縦横の中心を線にピッタリ合わせる） */}
+        <div className="axis-marker axis-marker-student" style={{
+          left: `${toPercent(studentValue)}%`,
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          position: 'absolute'
+        }}>
+          <span className="axis-dot"/>
+        </div>
+        <div className="axis-marker axis-marker-target" style={{
+          left: `${toPercent(targetValue)}%`,
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          position: 'absolute'
+        }}>
+          <span className="axis-diamond"/>
+        </div>
+
+        {/* ③ 目盛りと数字 */}
+        {ticks.map((tick) => {
+          const isTen = tick % 10 === 0;
+
+          return (
+            <div
+              key={tick}
+              style={{
+                position: 'absolute',
+                left: `${toPercent(tick)}%`,
+                top: '12px', /* バーのすぐ下に配置 */
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: '30px' /* 領域を固定して周囲を押し出さないようにする */
+              }}
+            >
+              {/* 目盛りの線 */}
+              <div style={{
+                width: '1.5px',
+                height: isTen ? '6px' : '4px',
+                backgroundColor: '#94a3b8',
+                marginBottom: '4px'
+              }}/>
+              {/* 10刻みの数字 */}
+              {isTen && (
+                <span style={{
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  color: '#64748b',
+                  lineHeight: '1'
+                }}>
+                  {tick}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
