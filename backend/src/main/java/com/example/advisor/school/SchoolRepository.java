@@ -47,6 +47,10 @@ public class SchoolRepository {
 
     public Optional<School> findSchoolByCode(String schoolCode) {
         deviationSchemaMigrationService.ensureMigrated();
+        return readSchoolByCode(schoolCode);
+    }
+
+    public Optional<School> readSchoolByCode(String schoolCode) {
         String sql = "SELECT id, name, school_category FROM school WHERE id = ?";
         List<School> schools = jdbcTemplate.query(sql, (rs, rowNum) -> new School(
                         toSchoolCode(rs.getInt("id")),
@@ -82,6 +86,10 @@ public class SchoolRepository {
 
     public Optional<Course> findCourseByCode(String courseCode) {
         deviationSchemaMigrationService.ensureMigrated();
+        return readCourseByCode(courseCode);
+    }
+
+    public Optional<Course> readCourseByCode(String courseCode) {
         String schoolCode = fromCourseCode(courseCode);
         String sql = "SELECT id, name, deviation FROM school WHERE id = ?";
         List<Course> courses = jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(

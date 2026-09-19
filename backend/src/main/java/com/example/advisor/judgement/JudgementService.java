@@ -6,7 +6,6 @@ import com.example.advisor.school.SchoolRepository;
 import com.example.advisor.school.ScoreType;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,49 +20,29 @@ public class JudgementService {
     }
 
     public JudgementResponse judge(JudgementRequest request) {
-        List<String> desiredCourseCodes = new ArrayList<>(request.desiredCourseCodes());
-
-        if (desiredCourseCodes.isEmpty()) {
-            throw new IllegalArgumentException("志望校を1校以上選択してください。");
-        }
-
-        List<SchoolJudgementResult> results = desiredCourseCodes.stream()
-            .filter(code -> code != null && !code.isBlank())
-            .distinct()
-            .map(code -> buildSchoolResult(code, request))
-            .toList();
-
-        if (results.isEmpty()) {
-            throw new IllegalArgumentException("志望校を1校以上選択してください。");
-        }
-
-        Integer firstChoice = toSchoolId(desiredCourseCodes, 0);
-        Integer secondChoice = toSchoolId(desiredCourseCodes, 1);
-        Integer thirdChoice = toSchoolId(desiredCourseCodes, 2);
-        judgementPersistenceService.save(request, firstChoice, secondChoice, thirdChoice);
-
-        return new JudgementResponse(results);
+        JudgementResponse response = evaluate(request, false);
+        judgementPersistenceService.save(request);
+        return response;
     }
 
-    private Integer toSchoolId(List<String> desiredCourseCodes, int index) {
-        List<String> distinctCodes = desiredCourseCodes.stream()
-            .filter(code -> code != null && !code.isBlank())
-            .distinct()
-            .toList();
-        if (index >= distinctCodes.size()) {
-            return null;
-        }
-        String code = distinctCodes.get(index);
-        if (!code.startsWith("course-")) {
-            throw new IllegalArgumentException("コースコードの形式が不正です。");
-        }
-        return Integer.parseInt(code.substring("course-".length()));
+    public JudgementResponse preview(JudgementRequest request) {
+        return evaluate(request, true);
     }
 
-    private SchoolJudgementResult buildSchoolResult(String courseCode, JudgementRequest request) {
-        Course desiredCourse = schoolRepository.findCourseByCode(courseCode)
+    private JudgementResponse evaluate(JudgementRequest request, boolean readOnly) {
+        List<Integer> ids = SchoolChoices.ids(request.desiredCourseCodes());
+        if (!readOnly && ids.stream().allMatch(java.util.Objects::isNull)) {
+            throw new IllegalArgumentException("志望校を1校以上選択してください。");
+        }
+        return new JudgementResponse(ids.stream()
+                .map(id -> id == null ? null : buildSchoolResult("course-" + id, request, readOnly))
+                .toList());
+    }
+
+    private SchoolJudgementResult buildSchoolResult(String courseCode, JudgementRequest request, boolean readOnly) {
+        Course desiredCourse = (readOnly ? schoolRepository.readCourseByCode(courseCode) : schoolRepository.findCourseByCode(courseCode))
             .orElseThrow(() -> new IllegalArgumentException("志望コースが見つかりません。"));
-        School desiredSchool = schoolRepository.findSchoolByCode(desiredCourse.schoolCode())
+        School desiredSchool = (readOnly ? schoolRepository.readSchoolByCode(desiredCourse.schoolCode()) : schoolRepository.findSchoolByCode(desiredCourse.schoolCode()))
             .orElseThrow();
 
         double studentDeviation = resolveStudentDeviation(desiredCourse.scoreType(), request);

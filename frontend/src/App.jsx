@@ -1,4 +1,7 @@
 import {useState} from 'react';
+import HistoryReport from './HistoryReport';
+import './history.css';
+import PrintPages from './PrintPages';
 
 const schoolCategoryLabels = {
   PUBLIC: '公立',
@@ -44,6 +47,19 @@ function formatDeviation(value) {
 }
 
 function App() {
+  const [mode, setMode] = useState('single');
+  return <>
+    <style>{`@media print { @page { size: A4 ${mode === 'history' ? 'landscape' : 'portrait'}; margin: ${mode === 'history' ? '5mm' : '6mm'}; } }`}</style>
+    <nav className="report-tabs" aria-label="帳票の選択">
+      <button type="button" aria-pressed={mode === 'single'} onClick={() => setMode('single')}>今回の成績・判定</button>
+      <button type="button" aria-pressed={mode === 'history'} onClick={() => setMode('history')}>全7回の成績一覧</button>
+    </nav>
+    <div hidden={mode !== 'single'}><SingleReport/></div>
+    <div hidden={mode !== 'history'}><HistoryReport/></div>
+  </>;
+}
+
+function SingleReport() {
   const [csvFile, setCsvFile] = useState(null);
   const [importResult, setImportResult] = useState(null);
   const [error, setError] = useState('');
@@ -91,6 +107,7 @@ function App() {
       <main className="content-grid">
         <section className="panel form-panel">
           <h2>{text.input}</h2>
+          <p>CSVを1つ選択し、成績を登録して個別帳票を作成します。</p>
           <form onSubmit={onSubmit} className="score-form">
             <label>
               <span>{text.csvLabel}</span>
@@ -117,20 +134,35 @@ function App() {
           </div>
         </section>
 
-        <section className="panel result-panel">
+        <section className="panel result-panel single-report-panel">
           <h2 className="result-title">{text.result}</h2>
 
           {error && <div className="error-box">{error}</div>}
           {!importResult && !error && <div className="empty-state">{text.noResult}</div>}
 
           {importResult && (
-            <div className="result-stack">
+            <>
+            <div className="result-stack report-screen-content">
               <button onClick={() => window.print()} className="print-button" style={{marginBottom: '20px'}}>
                 この結果を印刷する
               </button>
 
               {importResult.ledgers.map((ledger, index) => (
-                <article className="student-ledger" key={`${ledger.studentCode}-${ledger.times}-${index}`}>
+                <StudentLedger ledger={ledger} key={`${ledger.studentCode}-${ledger.times}-${index}`}/>
+              ))}
+            </div>
+            <PrintPages items={importResult.ledgers} renderItem={(ledger, index) => <StudentLedger ledger={ledger} key={index}/>}/>
+            </>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function StudentLedger({ledger}) {
+  return (
+                <article className="student-ledger" >
                   <div className="result-header">
                     <h2>第{ledger.times}回 学力診断テスト</h2>
                     <p className="result-header-school">{text.schoolName}</p>
@@ -145,6 +177,7 @@ function App() {
 
                   <div className="result-stack">
                     {ledger.results.map((entry, resultIndex) => {
+                      if (!entry) return null;
                       const shouldShowCourseLine =
                         entry.courseName &&
                         entry.courseName !== entry.schoolName &&
@@ -155,7 +188,7 @@ function App() {
                           <div className="judgement-card">
                             <div>
                               <p
-                                className="meta">{schoolCategoryLabels[entry.schoolCategory] ?? entry.schoolCategory}</p>
+                                className="meta">第{resultIndex + 1}志望 ／ {schoolCategoryLabels[entry.schoolCategory] ?? entry.schoolCategory}</p>
                               <h3>{entry.schoolName}</h3>
                               {shouldShowCourseLine && <p className="sub-meta">{entry.courseName}</p>}
                               <p className="sub-meta sub-meta-emphasis">
@@ -185,12 +218,6 @@ function App() {
                     </section>
                   </div>
                 </article>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
   );
 }
 

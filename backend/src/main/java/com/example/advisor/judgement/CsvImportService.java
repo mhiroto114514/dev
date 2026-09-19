@@ -45,7 +45,12 @@ public class CsvImportService {
                 if (line.isBlank()) {
                     continue;
                 }
-                ledgers.add(parseAndJudgeLine(line, lineNumber, headerIndex));
+                try {
+                    JudgementRequest request = parseLine(line, lineNumber, headerIndex);
+                    ledgers.add(toLedger(request, judgementService.judge(request)));
+                } catch (IllegalArgumentException ex) {
+                    throw new IllegalArgumentException(file.getOriginalFilename() + " / " + lineNumber + "行目: " + ex.getMessage(), ex);
+                }
             }
         } catch (IOException ex) {
             throw new IllegalArgumentException("Failed to read CSV file.");
@@ -58,7 +63,7 @@ public class CsvImportService {
         return new CsvImportResponse(ledgers);
     }
 
-    private StudentLedgerResult parseAndJudgeLine(String line, int lineNumber, Map<String, Integer> headerIndex) {
+    private JudgementRequest parseLine(String line, int lineNumber, Map<String, Integer> headerIndex) {
         String[] cells = line.split(",", -1);
         String studentName = getRequiredCell(cells, headerIndex, lineNumber, "name");
         int studentCode = parseInt(getRequiredCell(cells, headerIndex, lineNumber, "student_id"), lineNumber, "student_id");
@@ -125,15 +130,15 @@ public class CsvImportService {
         );
 
         List<String> desiredCourseCodes = new ArrayList<>();
-        appendCourseCode(desiredCourseCodes, getOptionalCell(cells, headerIndex, "first_choice"), lineNumber, "first_choice");
-        appendCourseCode(desiredCourseCodes, getOptionalCell(cells, headerIndex, "second_choice"), lineNumber, "second_choice");
-        appendCourseCode(desiredCourseCodes, getOptionalCell(cells, headerIndex, "third_choice"), lineNumber, "third_choice");
-
-        if (desiredCourseCodes.isEmpty()) {
-            throw new IllegalArgumentException("CSV line " + lineNumber + ": at least one school choice is required.");
+        for (int i = 0; i < SchoolChoices.COLUMNS.size(); i++) {
+            String column = SchoolChoices.COLUMNS.get(i);
+            String raw = i < 3 ? getOptionalCell(cells, headerIndex, column)
+                    : getOptionalCellIfPresent(cells, headerIndex, column);
+            desiredCourseCodes.add(raw == null || raw.isBlank() ? null : "course-" + parseInt(raw, lineNumber, column));
         }
+        SchoolChoices.ids(desiredCourseCodes);
 
-        JudgementRequest request = new JudgementRequest(
+        return new JudgementRequest(
                 studentCode,
                 studentName,
                 times,
@@ -154,28 +159,58 @@ public class CsvImportService {
                 desiredCourseCodes
         );
 
-        JudgementResponse response = judgementService.judge(request);
+    }
 
+    private StudentLedgerResult toLedger(JudgementRequest r, JudgementResponse response) {
         return new StudentLedgerResult(
-                studentCode,
-                studentName,
-                times,
-                japanese,
-                math,
-                english,
-                science,
-                socialstudies,
-                deviationJapanese,
-                deviationMath,
-                deviationEnglish,
-                deviationScience,
-                deviationSocialstudies,
-                deviationThree,
-                deviationFive,
-                saitamaDeviationThree,
-                saitamaDeviationFive,
+                r.studentCode(), r.studentName(), r.times(),
+                r.japaneseScore(), r.mathScore(), r.englishScore(), r.scienceScore(), r.socialstudiesScore(),
+                r.japaneseDeviation(), r.mathDeviation(), r.englishDeviation(), r.scienceDeviation(), r.socialstudiesDeviation(),
+                r.threeSubjectDeviation(), r.fiveSubjectDeviation(), r.saitamaDeviationThree(), r.saitamaDeviationFive(),
                 response.results()
         );
+    }
+
+    public CsvImportResponse preview(MultipartFile[] files) {
+        if (files == null || files.length == 0) throw new IllegalArgumentException("CSVを選択してください。");
+        Map<String, JudgementRequest> requests = new HashMap<>();
+        Map<String, String> sources = new HashMap<>();
+        Map<Integer, String> names = new HashMap<>();
+        List<StudentLedgerResult> ledgers = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String filename = file.getOriginalFilename();
+            int lineNumber = 1;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+                String header = reader.readLine();
+                if (header == null || header.isBlank()) throw new IllegalArgumentException("ヘッダーがありません。");
+                Map<String, Integer> index = toHeaderIndex(header);
+                String line;
+                int rows = 0;
+                while ((line = reader.readLine()) != null) {
+                    lineNumber++;
+                    if (line.isBlank()) continue;
+                    rows++;
+                    JudgementRequest r = parseLine(line, lineNumber, index);
+                    if (r.times() < 1 || r.times() > 7) throw new IllegalArgumentException("回数は1〜7で指定してください。");
+                    String key = r.studentCode() + ":" + r.times();
+                    String source = filename + " / " + lineNumber + "行目";
+                    String oldName = names.putIfAbsent(r.studentCode(), r.studentName());
+                    if (oldName != null && !oldName.equals(r.studentName())) throw new IllegalArgumentException("生徒コード " + r.studentCode() + " の氏名が一致しません（" + oldName + "）。");
+                    JudgementRequest old = requests.putIfAbsent(key, r);
+                    if (old != null) {
+                        if (!old.equals(r)) throw new IllegalArgumentException("同じ生徒・回の内容が " + sources.get(key) + " と異なります。");
+                        continue;
+                    }
+                    sources.put(key, source);
+                    ledgers.add(toLedger(r, judgementService.preview(r)));
+                }
+                if (rows == 0) throw new IllegalArgumentException("データ行がありません。");
+            } catch (IOException | IllegalArgumentException ex) {
+                throw new IllegalArgumentException(filename + " / " + lineNumber + "行目: " + ex.getMessage(), ex);
+            }
+        }
+        ledgers.sort(java.util.Comparator.comparing(StudentLedgerResult::studentCode).thenComparing(StudentLedgerResult::times));
+        return new CsvImportResponse(ledgers);
     }
 
     private Map<String, Integer> toHeaderIndex(String headerLine) {
@@ -260,11 +295,4 @@ public class CsvImportService {
         return Math.round(value * 10.0) / 10.0;
     }
 
-    private void appendCourseCode(List<String> desiredCourseCodes, String raw, int lineNumber, String column) {
-        if (raw == null || raw.isBlank()) {
-            return;
-        }
-        int schoolId = parseInt(raw, lineNumber, column);
-        desiredCourseCodes.add("course-" + schoolId);
-    }
 }

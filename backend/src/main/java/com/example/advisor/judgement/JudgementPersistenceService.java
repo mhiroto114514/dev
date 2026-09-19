@@ -26,7 +26,9 @@ public class JudgementPersistenceService {
     }
 
     @Transactional
-    public void save(JudgementRequest request, Integer firstChoice, Integer secondChoice, Integer thirdChoice) {
+    public void save(JudgementRequest request) {
+        List<Integer> choices = SchoolChoices.ids(request.desiredCourseCodes());
+        ResultTableColumns columns = getResultTableColumns();
         deviationSchemaMigrationService.ensureMigrated();
         Integer studentPk = jdbcTemplate.query(
                 "SELECT id FROM student WHERE student_id = ?",
@@ -50,7 +52,6 @@ public class JudgementPersistenceService {
             );
         }
 
-        ResultTableColumns columns = getResultTableColumns();
 
         List<String> insertColumns = new ArrayList<>(List.of(
                 "student_id",
@@ -93,12 +94,8 @@ public class JudgementPersistenceService {
             params.add(request.saitamaDeviationFive());
         }
 
-        insertColumns.add("first_choice");
-        insertColumns.add("second_choice");
-        insertColumns.add("third_choice");
-        params.add(firstChoice);
-        params.add(secondChoice);
-        params.add(thirdChoice);
+        insertColumns.addAll(SchoolChoices.COLUMNS);
+        params.addAll(choices);
 
         String placeholders = insertColumns.stream().map(column -> "?").collect(Collectors.joining(", "));
         String sql = "INSERT INTO result (" + String.join(", ", insertColumns) + ") VALUES (" + placeholders + ")";
@@ -123,6 +120,9 @@ public class JudgementPersistenceService {
                 ).stream()
                         .map(String::toLowerCase)
                         .collect(Collectors.toSet());
+                if (!resultColumns.containsAll(SchoolChoices.COLUMNS)) {
+                    throw new IllegalArgumentException("DBの5校対応が未適用です。backend/db/migrations/001_five_choices.sql を実行してから再度取り込んでください。");
+                }
                 resultTableColumns = new ResultTableColumns(
                         resolveColumn(resultColumns, "socialstudies", "socialscience"),
                         resolveColumn(resultColumns, "deviation_socialstudies", "deviation_socialscience"),

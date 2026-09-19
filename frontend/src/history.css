@@ -1,0 +1,30 @@
+.report-tabs { display: flex; gap: 12px; max-width: 1400px; margin: 24px auto; padding: 0 20px; }
+.report-tabs button { padding: 12px 20px; border: 1px solid #94a3b8; border-radius: 8px; background: #fff; color: #334155; cursor: pointer; }
+.report-tabs button[aria-pressed="true"] { background: #1e3a5f; color: #fff; }
+[hidden] { display: none !important; }
+.history-page { max-width: 1700px; padding: 20px; margin: auto; }
+.history-controls { background: #fff; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; margin-bottom: 28px; }
+.history-controls label { display: grid; gap: 12px; }
+.history-controls button { padding: 10px 20px; cursor: pointer; }
+.history-student { background: #fff; margin-bottom: 32px; }
+.history-student-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 0; }
+.history-student-heading h2 { font-size: 18px; margin: 0; }
+.history-student-heading span { font-size: 12px; }
+.history-table-scroll { overflow-x: auto; }
+.history-table { width: 100%; min-width: 1150px; border-collapse: collapse; table-layout: fixed; color: #172334; }
+.history-table th, .history-table td { border: 1px solid #94a3b8; padding: 7px 3px; text-align: center; font-size: 12px; }
+.history-table thead th { background: #eef3f8; }
+.history-table .history-school { text-align: left; overflow-wrap: anywhere; }
+.history-grade { font-weight: bold; }
+@media print {
+  .report-tabs, .history-controls { display: none !important; }
+  .history-page { width: 100%; max-width: none; padding: 0; margin: 0; }
+  .history-student { break-inside: avoid; page-break-inside: avoid; margin: 0 0 1.5mm; }
+  .history-student-heading { padding: 0 0 0.7mm; }
+  .history-student-heading h2 { font-size: 7.5pt; }
+  .history-student-heading span { font-size: 8pt; }
+  .history-table-scroll { overflow: visible; }
+  .history-table { min-width: 0; width: 100%; color: #000; }
+  .history-table th, .history-table td { font-size: 6.5pt; padding: 0.45mm 0.35mm; border: 0.2mm solid #555; line-height: 1; }
+  .history-table tr { break-inside: avoid; }
+}

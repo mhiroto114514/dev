@@ -27,4 +27,9 @@ public class JudgementController {
     public CsvImportResponse csvImport(@RequestParam("file") MultipartFile file) {
         return csvImportService.importAndJudge(file);
     }
+
+    @PostMapping("/csv-preview")
+    public CsvImportResponse csvPreview(@RequestParam("files") MultipartFile[] files) {
+        return csvImportService.preview(files);
+    }
 }
