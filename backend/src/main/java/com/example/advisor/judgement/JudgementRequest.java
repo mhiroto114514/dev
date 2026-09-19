@@ -30,6 +30,6 @@ public record JudgementRequest(
         @DecimalMin("20.0") @DecimalMax("90.0") Double fiveSubjectDeviation,
         Double saitamaDeviationThree,
         Double saitamaDeviationFive,
-        @NotNull @Size(max = 3) List<String> desiredCourseCodes
+        @NotNull @Size(max = 5) List<String> desiredCourseCodes
 ) {
 }

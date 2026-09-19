@@ -1,0 +1,4 @@
+# Copy to application-local.properties and set your local credentials.
+spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/school_advisor}
+spring.datasource.username=${DB_USERNAME:postgres}
+spring.datasource.password=${DB_PASSWORD:YOUR_LOCAL_PASSWORD}

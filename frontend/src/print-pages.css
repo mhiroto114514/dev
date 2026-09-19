@@ -1,0 +1,42 @@
+/* Print copies have physical page widths so font wrapping can be measured on screen. */
+.report-print-copy { position: absolute; left: -20000px; top: 0; visibility: hidden; pointer-events: none; }
+.report-print-page { width: 198mm; height: 283mm; box-sizing: border-box; overflow: hidden; }
+.report-print-page.landscape { width: 287mm; height: 198mm; }
+.report-print-content { width: 100%; transform-origin: top center; display: flow-root; }
+.report-print-copy .history-student { margin: 0 0 1.5mm; }
+.report-print-copy .history-student-heading { padding: 0 0 0.7mm; }
+.report-print-copy .history-student-heading h2 { font-size: 8pt; line-height: 1.2; }
+.report-print-copy .history-table-scroll { overflow: visible; }
+.report-print-copy .history-table { width: 100%; min-width: 0; height: 33.5mm; }
+.report-print-copy .history-table th, .report-print-copy .history-table td { font-size: 7pt; padding: 0.25mm 0.35mm; border: 0.2mm solid #555; line-height: 1.05; }
+.report-print-copy .history-table .history-school { font-size: 6pt; }
+.report-print-copy .history-table thead th { white-space: nowrap; }
+.report-print-copy .history-student:last-child { margin-bottom: 0; }
+
+.report-print-copy .student-ledger { padding: 3mm !important; margin: 0 !important; border: 0 !important; background: white; }
+.report-print-copy .result-header { margin: 0 0 2mm !important; padding: 0 !important; }
+.report-print-copy .result-header h2 { font-size: 14pt !important; margin: 0 !important; padding: 0 !important; }
+.report-print-copy .result-header-school { font-size: 9pt !important; }
+.report-print-copy .ledger-student-head { font-size: 10pt !important; padding: 1.5mm !important; margin: 0 0 2mm !important; }
+.report-print-copy .print-score-summary { display: table; width: 100%; border-collapse: collapse; font-size: 9pt !important; margin: 0 0 2mm !important; }
+.report-print-copy .print-score-summary th, .report-print-copy .print-score-summary td { padding: 1mm; border: 0.2mm solid #555; text-align: center; }
+.report-print-copy .result-stack { gap: 3mm !important; }
+.report-print-copy .school-result-block { padding: 2mm !important; margin: 0 !important; gap: 1mm !important; }
+.report-print-copy .judgement-card { padding: 2.5mm !important; min-height: 0 !important; gap: 2mm !important; }
+.report-print-copy .judgement-card > div:first-child { min-width: 0; }
+.report-print-copy .judgement-card h3 { font-size: 13pt !important; line-height: 1.2; margin: 1mm 0 !important; overflow-wrap: anywhere; }
+.report-print-copy .meta, .report-print-copy .sub-meta { font-size: 9pt !important; line-height: 1.2; margin: 0 !important; }
+.report-print-copy .badge { min-width: 10mm !important; min-height: 10mm !important; padding: 1mm !important; flex-shrink: 0; }
+.report-print-copy .badge span { font-size: 18pt !important; }
+.report-print-copy .badge small { font-size: 7pt !important; }
+.report-print-copy .deviation-axis { padding: 2mm 3mm 8mm !important; }
+.report-print-copy .print-notes { margin: 1mm 0 0 !important; padding-top: 1mm !important; font-size: 8pt !important; line-height: 1.2 !important; }
+.report-print-copy .print-notes p { margin: 0 0 0.5mm !important; }
+@media print {
+  .report-screen-content, .history-controls { display: none !important; }
+  .report-print-copy { position: static; visibility: visible; pointer-events: auto; }
+  .report-print-page { break-inside: avoid; break-after: page; page-break-after: always; }
+  .report-print-page:last-child { break-after: auto; page-break-after: auto; }
+  .report-print-copy .history-student, .report-print-copy .student-ledger { break-after: auto !important; page-break-after: auto !important; }
+  .single-report-panel { border: 0 !important; padding: 0 !important; border-radius: 0 !important; }
+}

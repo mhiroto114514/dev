@@ -30,7 +30,9 @@ CREATE TABLE if NOT EXISTS result (
     saitama_deviation_five NUMERIC(4,1),
     first_choice INTEGER REFERENCES school(id),
     second_choice INTEGER REFERENCES school(id),
-    third_choice INTEGER REFERENCES school(id)
+    third_choice INTEGER REFERENCES school(id),
+    fourth_choice INTEGER REFERENCES school(id),
+    fifth_choice INTEGER REFERENCES school(id)
 );
 
 DO $$

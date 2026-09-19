@@ -152,18 +152,48 @@ DATABASE school_advisor;
 
 ### 4-3. backend の接続先を確認
 
-`backend/src/main/resources/application.properties` を開き、次の 3 項目を自分の環境に合わせます。
+`backend/src/main/resources/application-local.properties.example` を同じフォルダに
+`application-local.properties` という名前でコピーし、次の3項目を自分の環境に合わせます。
+既存のローカルファイルがある場合はコピーせず、そのファイルを編集してください。
+
+このファイルはGit管理対象外です。ローカル設定を使う場合は、backend フォルダで
+`mvn spring-boot:run -Dspring-boot.run.profiles=local` として起動してください。
+共有の `application.properties` に個人の接続先・パスワードを書かないでください。
 
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5433/school_advisor
 spring.datasource.username=postgres
-spring.datasource.password=match114
+spring.datasource.password=自分で設定したパスワード
 ```
 
 ポイント:
 
 1. ポートが 5432 の人は URL の `5433` を `5432` に変更
 2. ユーザー名・パスワードは PostgreSQL 側に合わせる
+
+### 4-4. 既存DBを5校対応に更新する
+
+既存DBでは、次のSQLファイルを一度実行して `fourth_choice`・`fifth_choice` を追加してください。
+既存の生徒・成績は保持されます。再実行しても列は重複しません。
+`data.sql` の再実行やDB初期化は不要です。
+
+プロジェクト直下で実行します。ポート・ユーザー名・DB名はローカル設定に合わせてください。
+
+```powershell
+psql -h localhost -p 5432 -U postgres -d school_advisor -v ON_ERROR_STOP=1 -f backend/db/migrations/001_five_choices.sql
+```
+
+新規DBを更新済みの `schema.sql` で作成した場合は、すでに5校分の列があります。
+
+### 4-5. 志望校CSVと帳票
+
+- 志望校は最大5校。列は `first_choice`, `second_choice`, `third_choice`, `fourth_choice`, `fifth_choice` です。
+- 旧CSVには第4・第5志望列がなくても構いません。空欄は元の志望順位のまま保持します。
+- 同じ学校IDを複数の志望欄に指定するとエラーになります。
+- 「今回の成績・判定」は成績を保存し、個別帳票は生徒ごとにA4縦1ページです。
+- 「全7回の成績一覧」はDB保存せず、選択したCSVを生徒別・回数順に集計します。印刷はA4横で5人ごとに区切ります。
+- 学校名の長さなどでページを超える場合は、印刷時だけ縮小して収めます。ブラウザの印刷設定はA4・倍率100%・ヘッダーとフッターなしを基本にしてください。
+- APIの `results` は5要素で、未指定の志望順位は `null` です。個別帳票は未指定のカードを省略し、元の順位を表示します。
 
 ## 5. backend 起動
 
@@ -269,7 +299,7 @@ TRUNCATE TABLE result, student, school RESTART IDENTITY CASCADE;
 見直し箇所:
 
 1. PostgreSQL が起動しているか
-2. `application.properties` の URL・ユーザー名・パスワード
+2. `application-local.properties` の URL・ユーザー名・パスワード（環境変数 `DB_URL`・`DB_USERNAME`・`DB_PASSWORD` がある場合はそちらが優先）
 3. ポート番号（5432 / 5433）
 
 ### 9-4. 文字化けする

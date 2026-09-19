@@ -1,0 +1,2 @@
+﻿name,student_id,times,japanese,math,english,science,socialstudies,deviation_japanese,deviation_math,deviation_english,deviation_science,deviation_socialstudies,deviation_three,deviation_five,saitama_deviation_three,saitama_deviation_five,first_choice,second_choice,third_choice,fourth_choice,fifth_choice
+テスト生徒01,9900001,0,2,21,19,,,39.9,46.5,32.0,,,38.2,,44.2,,32,242,245,1,2
