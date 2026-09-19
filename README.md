@@ -1,6 +1,7 @@
 ﻿この README は、PC 1台で初期構築から起動確認までできるように書いています。  
 対象は **Windows 11** を想定しています。
 
+
 ## 1. このシステムで何を動かすか
 
 このプロジェクトは 3 つを同時に使います。
@@ -168,8 +169,8 @@ spring.datasource.password=match114
 
 別ターミナルで実行します。
 
-```powershell
-cd C:\DevDrive\saitama-school-advisor\backend
+```Git Bash
+cd backend
 mvn spring-boot:run
 ```
 
@@ -182,8 +183,8 @@ mvn spring-boot:run
 
 さらに別ターミナルで実行します。
 
-```powershell
-cd C:\DevDrive\saitama-school-advisor\frontend
+```Git Bash
+cd frontend
 npm install
 npm run dev
 ```
