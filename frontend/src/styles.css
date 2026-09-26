@@ -23,38 +23,7 @@ body {
 .page-shell {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 40px 0 56px;
-}
-
-.hero {
-  padding: 40px 8px 24px;
-}
-
-.hero-copy h1 {
-  margin: 10px 0 14px;
-  font-size: clamp(2rem, 5vw, 4rem);
-  line-height: 1.06;
-  letter-spacing: -0.04em;
-  max-width: 800px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  margin: 0;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(51, 65, 85, 0.08);
-  color: #334155;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-.lead {
-  max-width: 720px;
-  margin: 0;
-  color: #475569;
-  font-size: 1.03rem;
-  line-height: 1.8;
+  padding: 8px 0 56px;
 }
 
 .content-grid {
@@ -155,6 +124,12 @@ body {
   padding: 14px 16px;
   background: #fff;
   font: inherit;
+}
+
+.score-form input[type="file"] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .score-form input:focus {
@@ -602,7 +577,7 @@ body {
 @media (max-width: 640px) {
   .page-shell {
     width: min(100% - 20px, 100%);
-    padding-top: 24px;
+    padding-top: 8px;
   }
 
   .panel {
