@@ -16,8 +16,6 @@ const scoreTypeLabels = {
 };
 
 const text = {
-  title: '高校受験 判定システム',
-  lead: 'CSVファイルを取り込むと、生徒全員分の判定と帳簿を一括作成します。',
   input: 'CSV入力',
   result: '結果',
   notes: '注意事項',
@@ -51,8 +49,13 @@ function App() {
   return <>
     <style>{`@media print { @page { size: A4 ${mode === 'history' ? 'landscape' : 'portrait'}; margin: ${mode === 'history' ? '5mm' : '6mm'}; } }`}</style>
     <nav className="report-tabs" aria-label="帳票の選択">
-      <button type="button" aria-pressed={mode === 'single'} onClick={() => setMode('single')}>今回の成績・判定</button>
-      <button type="button" aria-pressed={mode === 'history'} onClick={() => setMode('history')}>全7回の成績一覧</button>
+      <p className="report-tabs-title">帳票の種類を選択</p>
+      <button type="button" aria-pressed={mode === 'single'} onClick={() => setMode('single')}>
+        <strong>個別帳票</strong><span>CSV 1件から作成</span>
+      </button>
+      <button type="button" aria-pressed={mode === 'history'} onClick={() => setMode('history')}>
+        <strong>成績一覧</strong><span>複数CSVをまとめて作成</span>
+      </button>
     </nav>
     <div hidden={mode !== 'single'}><SingleReport/></div>
     <div hidden={mode !== 'history'}><HistoryReport/></div>
@@ -96,14 +99,6 @@ function SingleReport() {
 
   return (
     <div className="page-shell">
-      <section className="hero">
-        <div className="hero-copy">
-          <p className="eyebrow">Saitama Entrance Advisor</p>
-          <h1>{text.title}</h1>
-          <p className="lead">{text.lead}</p>
-        </div>
-      </section>
-
       <main className="content-grid">
         <section className="panel form-panel">
           <h2>{text.input}</h2>

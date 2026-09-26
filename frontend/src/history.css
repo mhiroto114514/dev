@@ -1,6 +1,10 @@
-.report-tabs { display: flex; gap: 12px; max-width: 1400px; margin: 24px auto; padding: 0 20px; }
-.report-tabs button { padding: 12px 20px; border: 1px solid #94a3b8; border-radius: 8px; background: #fff; color: #334155; cursor: pointer; }
-.report-tabs button[aria-pressed="true"] { background: #1e3a5f; color: #fff; }
+.report-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; width: min(100% - 40px, 620px); margin: 20px auto 16px; padding: 0; }
+.report-tabs-title { grid-column: 1 / -1; margin: 0; color: #475569; font-size: 0.9rem; font-weight: 700; }
+.report-tabs button { display: grid; gap: 4px; min-width: 0; padding: 12px 16px; border: 1px solid #94a3b8; border-radius: 12px; background: rgba(255, 255, 255, 0.88); color: #334155; text-align: left; cursor: pointer; }
+.report-tabs button strong { font-size: 1rem; }
+.report-tabs button span { color: #64748b; font-size: 0.82rem; }
+.report-tabs button[aria-pressed="true"] { border: 2px solid #1e3a5f; padding: 11px 15px; background: #1e3a5f; color: #fff; }
+.report-tabs button[aria-pressed="true"] span { color: #dbeafe; }
 [hidden] { display: none !important; }
 .history-page { max-width: 1700px; padding: 20px; margin: auto; }
 .history-controls { background: #fff; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; margin-bottom: 28px; }
