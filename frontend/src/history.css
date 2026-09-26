@@ -12,7 +12,7 @@
 .history-student-heading span { font-size: 12px; }
 .history-table-scroll { overflow-x: auto; }
 .history-table { width: 100%; min-width: 1150px; border-collapse: collapse; table-layout: fixed; color: #172334; }
-.history-table th, .history-table td { border: 1px solid #94a3b8; padding: 7px 3px; text-align: center; font-size: 12px; }
+.history-table th, .history-table td { border: 1px solid #94a3b8; padding: 7px 3px; text-align: center; font-size: 12px; vertical-align: middle; }
 .history-table thead th { background: #eef3f8; }
 .history-table .history-school { text-align: left; overflow-wrap: anywhere; }
 .history-grade { font-weight: bold; }

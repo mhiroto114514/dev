@@ -11,8 +11,13 @@ function PrintPage({children, pageNumber, landscape}) {
     const fit = () => {
       if (!active || !frame.current || !content.current) return;
       const available = frame.current.clientHeight;
+      const availableWidth = frame.current.clientWidth;
       const needed = content.current.scrollHeight;
-      if (available && needed) setScale(Math.min(1, (available - 2) / needed));
+      const neededWidth = content.current.scrollWidth;
+      if (available && availableWidth && needed && neededWidth) {
+        const fitScale = Math.min((available - 2) / needed, (availableWidth - 2) / neededWidth);
+        setScale(landscape ? Math.min(1, fitScale) : Math.min(1.02, fitScale));
+      }
     };
     const observer = new ResizeObserver(fit);
     observer.observe(content.current);

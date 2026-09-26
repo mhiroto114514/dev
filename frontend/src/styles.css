@@ -451,7 +451,7 @@ body {
 .badge {
   min-width: 92px;
   min-height: 92px;
-  border-radius: 28px;
+  border-radius: 22px;
   display: grid;
   place-items: center;
   text-align: center;
@@ -1003,7 +1003,7 @@ body {
   .badge {
     min-width: 52px !important;
     min-height: 52px !important;
-    border-radius: 16px !important;
+    border-radius: 10px !important;
     border: none !important;
     background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
     color: #fff !important;
