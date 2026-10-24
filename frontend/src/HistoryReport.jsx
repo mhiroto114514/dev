@@ -20,7 +20,7 @@ export default function HistoryReport() {
     const body = new FormData();
     files.forEach(file => body.append('files', file));
     try {
-      const response = await fetch('http://localhost:8080/api/judgements/csv-preview', {method: 'POST', body});
+      const response = await fetch('/api/judgements/csv-preview', {method: 'POST', body});
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'CSVの取り込みに失敗しました。');
       setResult(data);

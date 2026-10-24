@@ -12,11 +12,22 @@ fs.mkdirSync(output, {recursive:true});
     const page = await browser.newPage({viewport:{width:1500,height:1100}});
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
-    await page.route('http://localhost:8080/api/**', async route => {
-      const url = route.request().url().replace('http://localhost:8080', process.env.ADVISOR_TEST_BACKEND_URL || 'http://localhost:18080');
-      await route.continue({url});
+    const frontend = new URL(process.env.ADVISOR_TEST_FRONTEND_URL || 'http://localhost:5173');
+    const backend = new URL(process.env.ADVISOR_TEST_BACKEND_URL || 'http://localhost:18080');
+    const externalRequests = [];
+    page.on('request', request => {
+      if (!['data:', 'blob:'].some(prefix => request.url().startsWith(prefix)) &&
+          ![frontend.origin, backend.origin].includes(new URL(request.url()).origin)) {
+        externalRequests.push(request.url());
+      }
     });
-    await page.goto(process.env.ADVISOR_TEST_FRONTEND_URL || 'http://localhost:5173');
+    if (frontend.origin !== backend.origin) {
+      await page.route(frontend.origin + '/api/**', async route => {
+        const url = route.request().url().replace(frontend.origin, backend.origin);
+        await route.continue({url});
+      });
+    }
+    await page.goto(frontend.href);
     await page.locator('.report-tabs button').nth(1).click();
     await page.locator('.history-controls input').setInputFiles(['01_round1.csv','02_round2.csv'].map(f => path.join(root,'test-data/csv-history',f)));
     const historyResponse = page.waitForResponse(r => r.url().endsWith('/csv-preview'));
@@ -42,6 +53,7 @@ fs.mkdirSync(output, {recursive:true});
     const heading = await page.locator('.report-print-copy .print-score-summary thead').first().innerText();
     assert(!heading.includes('理科') && !heading.includes('社会') && !heading.includes('5教科'));
     assert.deepEqual(errors,[]);
+    assert.deepEqual(externalRequests,[]);
 
     async function printCheck(selector, count, name) {
       await page.emulateMedia({media:'print'});
