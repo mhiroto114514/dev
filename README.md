@@ -2,17 +2,16 @@
 
 ## 1. このシステムで何を動かすか
 
-このプロジェクトは 3 つを同時に使います。
+CSVから判定と帳票を作成します。必要ソフトの導入は [first-time-setup.md](first-time-setup.md) を参照してください。
+成績は元CSV、学校情報は同梱のマスタCSVで管理します。PostgreSQLの準備は不要です。
 
-1. PostgreSQL（データベース）
-2. Spring Boot（backend API）
-3. React + Vite（frontend 画面）
+1. Spring Boot（backend API）
+2. React + Vite（frontend 画面）
 
 起動の順番は次です。
 
-1. PostgreSQL を起動
-2. backend を起動（`http://localhost:8080`）
-3. frontend を起動（`http://localhost:5173`）
+1. backend を起動（`http://localhost:8080`）
+2. frontend を起動（`http://localhost:5173`）
 
 ## 2. プロジェクトを開く
 
@@ -27,31 +26,7 @@ Get-Location
 表示された場所の末尾が `saitama-school-advisor` なら準備完了です。以降の手順で `cd backend` や `cd frontend`
 を実行するときも、このプロジェクトフォルダーから始めてください。
 
-## 3. PostgreSQL の準備
-
-### 3-1. PostgreSQL を起動
-
-PostgreSQL がサービス起動でない場合は、先に起動してください。  
-（例: Windows の「サービス」画面で PostgreSQL を開始）
-
-```powershell
-pg_ctl -D "C:\Program Files\PostgreSQL\18\data" start
-```
-
-### 3-3. backend の接続先を確認
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/school_advisor
-spring.datasource.username=postgres
-spring.datasource.password=自分で設定したパスワード
-```
-
-ポイント:
-
-1. ポートが 5433 の人は URL の `5432` を `5433` に変更
-2. ユーザー名・パスワードは PostgreSQL 側に合わせる
-
-### 3-4. CSVファイルの列
+## 3. CSVファイルの列
 
 CSVの先頭行には列名を入れます。以下は、現在の全22列を含むヘッダーです。
 
@@ -95,9 +70,9 @@ name,student_id,times,japanese,math,english,science,socialstudies,deviation_japa
 
 ## 4. backend 起動
 
-別ターミナルで実行します。
+プロジェクトフォルダーで開いたPowerShellから実行します。DBや接続パスワードは不要です。
 
-```Git Bash
+```powershell
 cd backend
 mvn spring-boot:run
 ```
@@ -109,9 +84,9 @@ mvn spring-boot:run
 
 ## 5. frontend 起動
 
-さらに別ターミナルで実行します。
+プロジェクトフォルダーで、もう1つPowerShellを開いて実行します。
 
-```Git Bash
+```powershell
 cd frontend
 npm install
 npm run dev
@@ -137,14 +112,10 @@ npm run dev
 原因: 8080 を他プロセスが使用中。  
 対処: 8080 使用中のプロセスを停止するか、backend 側ポートを変更。
 
-### 6-3. DB 接続エラー（認証失敗 / 接続拒否）
+### 6-3. 学校マスタの読込エラー
 
-見直し箇所:
-
-1. PostgreSQL が起動しているか
-2. `application-local.properties` の URL・ユーザー名・パスワード（環境変数 `DB_URL`・`DB_USERNAME`・`DB_PASSWORD`
-   がある場合はそちらが優先）
-3. ポート番号（5432 / 5433）
+`backend/src/main/resources/school-master.csv` の列名・IDの重複・数値・区分を確認してください。
+エラーにはファイルと行番号が表示されます。マスタに誤りがある場合は起動を停止します。
 
 ### 6-4. 文字化けする
 
@@ -157,3 +128,23 @@ npm run dev
 ## 7. 停止方法
 
 backend / frontend の各ターミナルで `Ctrl + C` を押します。
+
+## 8. データの保管と学校マスタの更新
+
+成績はアプリ内に保存されません。単票・一覧ともCSVの生徒コード・氏名・成績を使います。元CSVは削除せず保管してください。
+
+学校マスタは `backend/src/main/resources/school-master.csv` です。列は `id,name,deviation,school_category` で、初期474件は旧 `data.sql` の記載順をIDとして移行しています。
+区分は `PUBLIC`（公立）、`PRIVATE`（私立）、`NATIONAL`（国立）、`KOSEN`（高専）です。
+既存IDの変更・再利用・振り直しは、過去の成績CSVの志望校を変えてしまうため行わないでください。新しい学校は未使用のIDで追加します。
+
+マスタを変更したらbackendを再起動します。JAR配布時は再ビルドするか、次のように外部マスタを明示して起動できます。
+
+```powershell
+java -jar backend/target/saitama-school-advisor-0.0.1-SNAPSHOT.jar --advisor.school-master=file:C:/SchoolAdvisor/school-master.csv
+```
+
+外部マスタもUTF-8で保存してください。偏差値は小数第1位に丸めます。マスタは起動時に一括読込し、実行中には切り替わりません。
+過去と同じ判定を再現するには、元CSVと使用したマスタ・アプリのバージョンもセットで保管してください。
+学校IDの確認には `school_id_mapping.csv`、区分別CSV、`school_id_mapping.xlsx` を利用できます。これらは参照用で、実際の判定にはマスタCSVを使います。
+
+DB版との比較範囲・検証方法・意図した変更は [docs/db-removal.md](docs/db-removal.md) に記載しています。

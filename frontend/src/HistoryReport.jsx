@@ -40,7 +40,7 @@ export default function HistoryReport() {
   return <main className="history-page">
     <section className="history-controls">
       <h1>全7回の成績一覧</h1>
-      <p>各回のCSVをまとめて選択してください。選んだCSVから一覧を作成します。成績は登録されません。</p>
+      <p>各回のCSVをまとめて選択してください。選んだCSVから一覧を作成します。元のCSVは手元に保管してください。</p>
       <form onSubmit={submit}>
         <label>CSVファイル（複数選択可）<input type="file" multiple accept=".csv,text/csv" required
           disabled={loading} onChange={event => setFiles(Array.from(event.target.files ?? []))}/></label>

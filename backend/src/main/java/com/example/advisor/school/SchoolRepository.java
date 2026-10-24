@@ -1,148 +1,114 @@
 package com.example.advisor.school;
 
-import com.example.advisor.db.DeviationSchemaMigrationService;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import java.io.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Repository
 public class SchoolRepository {
+    private final List<Entry> sorted;
+    private final Map<Integer, Entry> byId;
 
-    private static final String DEFAULT_DEPARTMENT = "普通科";
-
-    private final JdbcTemplate jdbcTemplate;
-    private final DeviationSchemaMigrationService deviationSchemaMigrationService;
-
-    public SchoolRepository(
-            JdbcTemplate jdbcTemplate,
-            DeviationSchemaMigrationService deviationSchemaMigrationService
-    ) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.deviationSchemaMigrationService = deviationSchemaMigrationService;
-    }
-
-    public List<School> findAllSchools() {
-        deviationSchemaMigrationService.ensureMigrated();
-        String sql = "SELECT id, name, school_category FROM school ORDER BY deviation DESC, id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new School(
-                toSchoolCode(rs.getInt("id")),
-                rs.getString("name"),
-                toSchoolCategory(rs.getString("school_category"))
-        ));
-    }
-
-    public List<School> findSchoolsByCategory(SchoolCategory schoolCategory) {
-        deviationSchemaMigrationService.ensureMigrated();
-        String sql = "SELECT id, name, school_category FROM school WHERE school_category = ? ORDER BY deviation DESC, id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> new School(
-                        toSchoolCode(rs.getInt("id")),
-                        rs.getString("name"),
-                        toSchoolCategory(rs.getString("school_category"))
-                ),
-                schoolCategory.name()
-        );
-    }
-
-    public Optional<School> findSchoolByCode(String schoolCode) {
-        deviationSchemaMigrationService.ensureMigrated();
-        return readSchoolByCode(schoolCode);
-    }
-
-    public Optional<School> readSchoolByCode(String schoolCode) {
-        String sql = "SELECT id, name, school_category FROM school WHERE id = ?";
-        List<School> schools = jdbcTemplate.query(sql, (rs, rowNum) -> new School(
-                        toSchoolCode(rs.getInt("id")),
-                        rs.getString("name"),
-                        toSchoolCategory(rs.getString("school_category"))
-                ),
-                fromSchoolCode(schoolCode)
-        );
-        return schools.stream().findFirst();
-    }
-
-    public List<Course> findAllCourses() {
-        deviationSchemaMigrationService.ensureMigrated();
-        String sql = "SELECT id, name, deviation FROM school ORDER BY deviation DESC, id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(
-                rs.getInt("id"),
-                rs.getString("name"),
-                rs.getDouble("deviation")
-        ));
-    }
-
-    public List<Course> findCoursesByCategory(SchoolCategory schoolCategory) {
-        deviationSchemaMigrationService.ensureMigrated();
-        String sql = "SELECT id, name, deviation FROM school WHERE school_category = ? ORDER BY deviation DESC, id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDouble("deviation")
-                ),
-                schoolCategory.name()
-        );
-    }
-
-    public Optional<Course> findCourseByCode(String courseCode) {
-        deviationSchemaMigrationService.ensureMigrated();
-        return readCourseByCode(courseCode);
-    }
-
-    public Optional<Course> readCourseByCode(String courseCode) {
-        String schoolCode = fromCourseCode(courseCode);
-        String sql = "SELECT id, name, deviation FROM school WHERE id = ?";
-        List<Course> courses = jdbcTemplate.query(sql, (rs, rowNum) -> toCourse(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDouble("deviation")
-                ),
-                fromSchoolCode(schoolCode)
-        );
-        return courses.stream().findFirst();
-    }
-
-    private Course toCourse(int schoolId, String schoolName, double deviation) {
-        return new Course(
-                toCourseCode(schoolId),
-                toSchoolCode(schoolId),
-                DEFAULT_DEPARTMENT,
-                schoolName,
-                ScoreType.FIVE_SUBJECT,
-                deviation
-        );
-    }
-
-    private SchoolCategory toSchoolCategory(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return SchoolCategory.PUBLIC;
+    public SchoolRepository(@Value("${advisor.school-master:classpath:school-master.csv}") Resource resource) {
+        Map<Integer, Entry> loaded = new HashMap<>();
+        try (var reader = new BufferedReader(new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+            String header = reader.readLine();
+            if (header == null || !header.replace("\uFEFF", "").equals("id,name,deviation,school_category")) {
+                throw new IllegalArgumentException("Expected id,name,deviation,school_category header");
+            }
+            String line;
+            int lineNumber = 1;
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                if (line.isBlank()) continue;
+                try {
+                    List<String> cells = cells(line);
+                    if (cells.size() != 4) throw new IllegalArgumentException("Expected four columns");
+                    int id = Integer.parseInt(cells.get(0).trim());
+                    if (id <= 0) throw new IllegalArgumentException("ID must be positive");
+                    String name = cells.get(1);
+                    if (name.isBlank() || name.codePointCount(0, name.length()) > 120) {
+                        throw new IllegalArgumentException("Name must have 1..120 characters");
+                    }
+                    // Match the former NUMERIC(4,1) column and its rounding.
+                    BigDecimal deviation = new BigDecimal(cells.get(2).trim()).setScale(1, RoundingMode.HALF_UP);
+                    if (deviation.abs().compareTo(new BigDecimal("999.9")) > 0) throw new IllegalArgumentException("Deviation out of range");
+                    SchoolCategory category = SchoolCategory.valueOf(cells.get(3).trim());
+                    if (loaded.putIfAbsent(id, new Entry(id, name, deviation.doubleValue(), category)) != null) {
+                        throw new IllegalArgumentException("Duplicate ID " + id);
+                    }
+                } catch (IllegalArgumentException ex) {
+                    throw new IllegalArgumentException("Line " + lineNumber + ": " + ex.getMessage(), ex);
+                }
+            }
+            if (loaded.isEmpty()) throw new IllegalArgumentException("School master is empty");
+        } catch (IOException | IllegalArgumentException ex) {
+            throw new IllegalStateException("Cannot load school master " + resource.getDescription() + ": " + ex.getMessage(), ex);
         }
-        try {
-            return SchoolCategory.valueOf(raw);
-        } catch (IllegalArgumentException ex) {
-            return SchoolCategory.PUBLIC;
+        byId = Map.copyOf(loaded);
+        sorted = loaded.values().stream().sorted(Comparator.comparingDouble(Entry::deviation).reversed()
+                .thenComparingInt(Entry::id)).toList();
+    }
+
+    public List<School> findAllSchools() { return sorted.stream().map(Entry::school).toList(); }
+    public List<Course> findAllCourses() { return sorted.stream().map(Entry::course).toList(); }
+    public List<School> findSchoolsByCategory(SchoolCategory category) {
+        return sorted.stream().filter(e -> e.category() == category).map(Entry::school).toList();
+    }
+    public List<Course> findCoursesByCategory(SchoolCategory category) {
+        return sorted.stream().filter(e -> e.category() == category).map(Entry::course).toList();
+    }
+    public Optional<School> findSchoolByCode(String code) {
+        return Optional.ofNullable(byId.get(id(code, "school-", "School"))).map(Entry::school);
+    }
+    public Optional<Course> findCourseByCode(String code) {
+        return Optional.ofNullable(byId.get(id(code, "course-", "Course"))).map(Entry::course);
+    }
+    private static int id(String code, String prefix, String label) {
+        if (code == null || !code.startsWith(prefix)) throw new IllegalArgumentException(label + " code format is invalid.");
+        return Integer.parseInt(code.substring(prefix.length()));
+    }
+    private record Entry(int id, String name, double deviation, SchoolCategory category) {
+        School school() { return new School("school-" + id, name, category); }
+        Course course() {
+            // Keep the existing course interpretation; names already contain the course label.
+            return new Course("course-" + id, "school-" + id, "普通科", name, ScoreType.FIVE_SUBJECT, deviation);
         }
     }
 
-    private String toSchoolCode(int id) {
-        return "school-" + id;
-    }
-
-    private String toCourseCode(int id) {
-        return "course-" + id;
-    }
-
-    private int fromSchoolCode(String schoolCode) {
-        if (schoolCode == null || !schoolCode.startsWith("school-")) {
-            throw new IllegalArgumentException("School code format is invalid.");
-        }
-        return Integer.parseInt(schoolCode.substring("school-".length()));
-    }
-
-    private String fromCourseCode(String courseCode) {
-        if (courseCode == null || !courseCode.startsWith("course-")) {
-            throw new IllegalArgumentException("Course code format is invalid.");
-        }
-        return "school-" + Integer.parseInt(courseCode.substring("course-".length()));
+    private static List<String> cells(String line) {
+        List<String> result = new ArrayList<>();
+        int i = 0;
+        do {
+            StringBuilder value = new StringBuilder();
+            if (i < line.length() && line.charAt(i) == '"') {
+                i++;
+                boolean closed = false;
+                while (i < line.length()) {
+                    char c = line.charAt(i++);
+                    if (c != '"') value.append(c);
+                    else if (i < line.length() && line.charAt(i) == '"') { value.append('"'); i++; }
+                    else { closed = true; break; }
+                }
+                if (!closed || (i < line.length() && line.charAt(i) != ',')) throw new IllegalArgumentException("Invalid CSV quoting");
+            } else {
+                while (i < line.length() && line.charAt(i) != ',') {
+                    char c = line.charAt(i++);
+                    if (c == '"') throw new IllegalArgumentException("Invalid CSV quoting");
+                    value.append(c);
+                }
+            }
+            result.add(value.toString());
+            if (i == line.length()) break;
+            i++;
+            if (i == line.length()) { result.add(""); break; }
+        } while (true);
+        return result;
     }
 }

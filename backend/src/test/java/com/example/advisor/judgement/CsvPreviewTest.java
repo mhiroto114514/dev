@@ -12,20 +12,16 @@ import static org.mockito.Mockito.*;
 
 class CsvPreviewTest {
     private SchoolRepository schools;
-    private JudgementPersistenceService persistence;
     private CsvImportService csv;
     private static final String HEADER = "name,student_id,times,japanese,math,english,deviation_japanese,deviation_math,deviation_english,deviation_three,first_choice,second_choice,third_choice\n";
 
     @BeforeEach void setup() {
         schools = mock(SchoolRepository.class);
-        persistence = mock(JudgementPersistenceService.class);
         Course course = new Course("course-1", "school-1", "", "School", ScoreType.FIVE_SUBJECT, 50);
         School school = new School("school-1", "School", SchoolCategory.PUBLIC);
-        when(schools.readCourseByCode("course-1")).thenReturn(Optional.of(course));
-        when(schools.readSchoolByCode("school-1")).thenReturn(Optional.of(school));
         when(schools.findCourseByCode("course-1")).thenReturn(Optional.of(course));
         when(schools.findSchoolByCode("school-1")).thenReturn(Optional.of(school));
-        csv = new CsvImportService(new JudgementService(schools, persistence));
+        csv = new CsvImportService(new JudgementService(schools));
     }
 
     private MockMultipartFile file(String name, String rows) {
@@ -36,8 +32,6 @@ class CsvPreviewTest {
         for (int i = 2; i <= 5; i++) {
             var course = new Course("course-" + i, "school-" + i, "", "School " + i, ScoreType.FIVE_SUBJECT, 50);
             var school = new School("school-" + i, "School " + i, SchoolCategory.PRIVATE);
-            when(schools.readCourseByCode("course-" + i)).thenReturn(Optional.of(course));
-            when(schools.readSchoolByCode("school-" + i)).thenReturn(Optional.of(school));
             when(schools.findCourseByCode("course-" + i)).thenReturn(Optional.of(course));
             when(schools.findSchoolByCode("school-" + i)).thenReturn(Optional.of(school));
         }
@@ -60,19 +54,15 @@ class CsvPreviewTest {
         assertNull(old.results().get(4));
     }
 
-    @Test void holesAreRetainedForPersistenceAndDuplicatesFailBeforeSaving() {
+    @Test void holesAreRetainedAndDuplicatesFail() {
         fiveSchools();
         var imported = csv.importAndJudge(fiveFile("1,,3,,5")).ledgers().get(0);
         assertNull(imported.results().get(1));
         assertEquals("School 5", imported.results().get(4).schoolName());
-        verify(persistence).save(argThat(r -> SchoolChoices.ids(r.desiredCourseCodes())
-                .equals(java.util.Arrays.asList(1, null, 3, null, 5))));
-        clearInvocations(persistence);
         var ex = assertThrows(IllegalArgumentException.class, () -> csv.importAndJudge(fiveFile("1,2,3,4,1")));
         assertTrue(ex.getMessage().contains("five.csv / 2行目"));
         assertTrue(ex.getMessage().contains("重複"));
         assertThrows(IllegalArgumentException.class, () -> csv.preview(new MultipartFile[]{fiveFile("1,2,3,4,1")}));
-        verifyNoInteractions(persistence);
     }
 
     @Test void choiceValidationRejectsOversizeAndCanonicalDuplicates() {
@@ -81,7 +71,7 @@ class CsvPreviewTest {
         assertThrows(IllegalArgumentException.class, () -> SchoolChoices.ids(java.util.List.of("course-0")));
     }
 
-    @Test void groupsSortsDeduplicatesWithoutSavingAndPreservesSlots() {
+    @Test void groupsSortsDeduplicatesAndPreservesSlots() {
         String second = "Student,2,2,0,50,50,50.1,50,50,50,,1,\n";
         var result = csv.preview(new MultipartFile[]{file("second.csv", second), file("first.csv",
                 "Student,2,1,50,50,50,50,50,50,50,1,,\nOther,1,1,50,50,50,50,50,50,50,1,,\n"), file("copy.csv", second)});
@@ -95,9 +85,6 @@ class CsvPreviewTest {
         assertNull(row.results().get(0));
         assertNotNull(row.results().get(1));
         assertNull(row.results().get(2));
-        verifyNoInteractions(persistence);
-        verify(schools, never()).findCourseByCode(anyString());
-        verify(schools, never()).findSchoolByCode(anyString());
     }
 
     @Test void conflictsIdentifyBothSources() {
@@ -106,14 +93,12 @@ class CsvPreviewTest {
                 file("b.csv", "Student,1,1,51,50,50,50,50,50,50,1,,\n")}));
         assertTrue(ex.getMessage().contains("a.csv / 2"));
         assertTrue(ex.getMessage().contains("b.csv / 2"));
-        verifyNoInteractions(persistence);
     }
 
     @Test void rejectsInvalidRoundNameAndSchool() {
         assertThrows(IllegalArgumentException.class, () -> csv.preview(new MultipartFile[]{file("range.csv", "Student,1,8,50,50,50,50,50,50,50,1,,\n")}));
         assertThrows(IllegalArgumentException.class, () -> csv.preview(new MultipartFile[]{file("name.csv", "Student,1,1,50,50,50,50,50,50,50,1,,\nOther,1,2,50,50,50,50,50,50,50,1,,\n")}));
         assertThrows(IllegalArgumentException.class, () -> csv.preview(new MultipartFile[]{file("school.csv", "Student,1,1,50,50,50,50,50,50,50,99,,\n")}));
-        verifyNoInteractions(persistence);
     }
 
     @Test void emptyFilesFailAndNoChoicesAreAllowedForHistory() {
@@ -121,14 +106,12 @@ class CsvPreviewTest {
         assertThrows(IllegalArgumentException.class, () -> csv.preview(new MultipartFile[]{file("empty.csv", "")}));
         var row = csv.preview(new MultipartFile[]{file("none.csv", "Student,1,1,50,50,50,50,50,50,50,,,\n")}).ledgers().get(0);
         assertTrue(row.results().stream().allMatch(java.util.Objects::isNull));
-        verifyNoInteractions(persistence);
     }
 
-    @Test void originalImportStillSavesAndMatchesPreview() {
+    @Test void originalImportMatchesPreview() {
         var input = file("a.csv", "Student,1,1,50,50,50,50,50,50,50,1,,\n");
         var preview = csv.preview(new MultipartFile[]{input}).ledgers().get(0);
         var imported = csv.importAndJudge(input).ledgers().get(0);
         assertEquals(preview.results().get(0), imported.results().get(0));
-        verify(persistence).save(any());
     }
 }
