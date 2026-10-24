@@ -3,8 +3,6 @@
   "database": "PostgreSQL 18, isolated cluster port 18432",
   "source": "data.sql VALUES order defines IDs 1..474; trailing comma removed for execution only",
   "cases": {
-    "all-courses": "784491a69653b0ea36817b8d2d9bf8089ede257b8bf990581ed866558a7ae643",
-    "all-schools": "9a3ad00fa474cd350d48cb75c53c2c0f04e6cd85e7b1e0b6b95ad2792d2c135e",
     "all-schools-import--1.9": "0e9e09c17db9dbf3080aba00aafec414138d141afab879bde75cb5234c9ae2ca",
     "all-schools-import--2.0": "4e4d17d38ed82755a5720a596fd1f3cb73d507f05518e15c96e541629e7906c8",
     "all-schools-import--2.1": "af8edacb73edf8a7691376695217326272c5eac385b5d7d39644950eb193f98f",
@@ -27,7 +25,6 @@
     "average-fallback-preview": "f30ce689b4f8b27b80665877795d97a72934d8dc4938975a36845711e87bb94a",
     "bom-import": "c4dcbfa98144de2d2f42da18d53c401a52565fbc8f2c031c9b35464f9ad4f69a",
     "bom-preview": "c4dcbfa98144de2d2f42da18d53c401a52565fbc8f2c031c9b35464f9ad4f69a",
-    "courses": "7ac4d3846e01e140f93c9dca77af3795cd7aadec4f8bcbfc4a4372c614ba090d",
     "duplicate-choice-import": "db2b2f71b6907a5932446ab235d2ba2cac04c76b8ef37071698ff961027d17e9",
     "duplicate-choice-preview": "db2b2f71b6907a5932446ab235d2ba2cac04c76b8ef37071698ff961027d17e9",
     "empty-import": "b08f5b11fc82edcad566f84cce2d912acbc5ea4e680f6f185d0d177fde0ecd96",
@@ -56,7 +53,6 @@
     "round-eight-preview": "d1d3dae223527d2bd84437d14b081c7a3be8decbf3d1b2212c682ad9cc9b53a5",
     "round-zero-import": "cba679171360375bb2c04a466add77689e0e54a2cf2c6b07f5c467de9a70c25d",
     "round-zero-preview": "37f0964ec66858128f82349a1787a563d407c6c6bc2c3dc5af496b1dcdd2b89b",
-    "schools": "a16359d70ee73ae9f9065b91965af54f808911be90b24305d4e9230d969ffca9",
     "three-only-import": "6a9eea9cb2faa3b64c7c5ad4ce89712208f761765527c399e5465d80bc3f17d3",
     "three-only-preview": "6a9eea9cb2faa3b64c7c5ad4ce89712208f761765527c399e5465d80bc3f17d3",
     "unknown-choice-import": "7055fdd50387b2b8cdb313e5b1f0a3b56cb62790ba95e38921a6f94d3725b0ae",
@@ -65,5 +61,5 @@
   "sourceSqlSha256": "3130030e32048668f719ee70016fc9921735811a007fa3e4712f8a50cdcc3de2",
   "schoolMasterSha256": "54eabb944d9e35b60470bd153636d31e7ffc00dd9d4cfa05891cfbc9d6242ef1",
   "schoolCount": 474,
-  "caseCount": 58
+  "caseCount": 54
 }

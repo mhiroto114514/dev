@@ -12,7 +12,6 @@ import java.util.*;
 
 @Repository
 public class SchoolRepository {
-    private final List<Entry> sorted;
     private final Map<Integer, Entry> byId;
 
     public SchoolRepository(@Value("${advisor.school-master:classpath:school-master.csv}") Resource resource) {
@@ -52,18 +51,8 @@ public class SchoolRepository {
             throw new IllegalStateException("Cannot load school master " + resource.getDescription() + ": " + ex.getMessage(), ex);
         }
         byId = Map.copyOf(loaded);
-        sorted = loaded.values().stream().sorted(Comparator.comparingDouble(Entry::deviation).reversed()
-                .thenComparingInt(Entry::id)).toList();
     }
 
-    public List<School> findAllSchools() { return sorted.stream().map(Entry::school).toList(); }
-    public List<Course> findAllCourses() { return sorted.stream().map(Entry::course).toList(); }
-    public List<School> findSchoolsByCategory(SchoolCategory category) {
-        return sorted.stream().filter(e -> e.category() == category).map(Entry::school).toList();
-    }
-    public List<Course> findCoursesByCategory(SchoolCategory category) {
-        return sorted.stream().filter(e -> e.category() == category).map(Entry::course).toList();
-    }
     public Optional<School> findSchoolByCode(String code) {
         return Optional.ofNullable(byId.get(id(code, "school-", "School"))).map(Entry::school);
     }

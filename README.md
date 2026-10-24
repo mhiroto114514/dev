@@ -105,7 +105,8 @@ npm run dev
 確認:
 
 1. `backend` ターミナルが落ちていないか
-2. `http://localhost:8080/api/courses` をブラウザで開いて JSON が返るか
+2. backendのログに `Started AdvisorApplication` が表示されているか
+3. ブラウザの開発者ツールの「ネットワーク」で、CSVの送信先 `http://localhost:8080/api/judgements/csv-import` または `csv-preview` に接続できているか
 
 ### 6-2. `Port 8080 was already in use`
 
