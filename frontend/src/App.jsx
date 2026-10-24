@@ -82,7 +82,7 @@ function SingleReport() {
     formData.append('file', csvFile);
 
     try {
-      const response = await fetch('http://localhost:8080/api/judgements/csv-import', {
+      const response = await fetch('/api/judgements/csv-import', {
         method: 'POST',
         body: formData
       });
