@@ -26,7 +26,7 @@ VALUES記載順を旧serial IDとして1〜474を明示した `school-master.csv
 
 ## 維持する動作
 
-CSVの22列・旧社会列名・空欄・0点・小数処理・志望校最大5件と空き順位、各APIの返却形式を維持する。
+CSVの22列・旧社会列名・空欄・0点・小数処理・志望校最大5件と空き順位、CSV用APIの返却形式を維持する。
 単票は志望校1件以上が必要、一覧はゼロ件可。一覧の同一内容の重複排除、氏名不一致・成績衝突、1〜7回の制限、並び順も維持する。
 単票CSVには以前から一覧と同じ回数上限チェックやJSON APIのBean Validationはかかっていないため、この移行では追加していない。
 取込途中で失敗した場合、途中までの帳票を成功結果として返さない。取込ごとの生徒・成績の状態は保持しない。
@@ -41,11 +41,12 @@ CSVの22列・旧社会列名・空欄・0点・小数処理・志望校最大5�
 旧コードを専用の実PostgreSQL 18で動かし、APIが返すデータと400エラー相当の説明を58ケース取得した。
 通常利用中のDBには接続していない。比較DBはlocalhost:18432のみで、採取後に停止した。
 全474校について9つの判定差（-5.1/-5/-4.9/-2.1/-2/-1.9/2.9/3/3.1）を単票と一覧の両方で比較する。
-ほかに学校一覧・コース一覧、理社なし、0点、偏差値の小数丸め、埼玉値・通常値・平均への切替、BOM、旧CSV、空き志望順位、ゼロ志望、重複ID、不明ID、空ファイル、列欠落、数値エラー、範囲外の回数、複数CSVの順序・重複・衝突・氏名不一致を含む。
+当初は学校一覧・コース一覧も含めていた。現在残しているCSVの比較は、理社なし、0点、偏差値の小数丸め、埼玉値・通常値・平均への切替、BOM、旧CSV、空き志望順位、ゼロ志望、重複ID、不明ID、空ファイル、列欠落、数値エラー、範囲外の回数、複数CSVの順序・重複・衝突・氏名不一致を含む。
 
 固定した応答のSHA-256は `backend/src/test/resources/db-removal-baseline.json`。
 JSONオブジェクトのキー順だけを正規化し、配列順・数値・null・文字列・エラー内容は比較する。
-`DatabaseRemovalParityTest` が新実装の58ケースと照合する。実際の新応答はbackend/target/db-removal-responsesへ出力する。
+未使用APIの廃止に伴い、学校・コース一覧に関する4ケースのみ除去した。残るCSVの54ケースは、旧版から取得した期待値を変更せずに保持している。
+`DatabaseRemovalParityTest` が現実装の54ケースと照合する。実際の新応答はbackend/target/db-removal-responsesへ出力する。
 `SchoolRepositoryTest` は旧SQL全474行とCSVのID・学校名・区分・目標偏差値を独立に照合する。
 `DatabaseFreeApplicationTest` は接続不能なDB設定を与えてSpring Bootを起動し、DataSource・JDBC・PostgreSQL/H2ドライバーがないこと、HTTPエンドポイントの応答を確認する。
 
@@ -56,19 +57,11 @@ mvn clean test
 
 基準値を新版の結果から作り直してはならない。判定仕様やマスタ更新による差は理由を確認し、別の変更として記録する。
 
-## 旧版での基準値再取得
+## 基準値の由来
 
-1. `git archive e12b5b0` などで旧コードを別の検証フォルダーへ展開する。
-2. 現ブランチの `DatabaseRemovalCases.java` と `tools/db-removal/LegacyDatabaseBaselineTest.java` を、その旧コードのbackend/src/test/java/com/example/advisor/judgementへコピーする。
-3. 空の検証用PostgreSQLクラスタをユーザーadvisor_test、ローカルポート18432で起動する。普段使用しているDBは使わない。
-4. 旧コード側のbackendで次を実行する。
-
-```powershell
-mvn "-Dtest=LegacyDatabaseBaselineTest" "-Dbaseline.jdbc.url=jdbc:postgresql://127.0.0.1:18432/postgres" test
-```
-
-生成されたdb-removal-baseline.jsonのcasesと現在の基準値を比較する。テストは専用クラスタのschool/student/resultを初期化する。
-採取後は専用PostgreSQLを停止する。DBが必要なのはこの歴史的基準の再取得だけで、通常ビルド・テスト・運用には不要。
+旧DB版専用の基準採取テストは、現行機能のテストではないため削除した。
+歴史的な採取手順やツールが必要な場合は、DB廃止コミット `94b6e99` の資料を別の検証場所で参照する。
+通常ビルド・テスト・運用にはPostgreSQLを使わない。保存済みの期待値を現実装から作り直してはならない。
 
 旧SQLからのCSV再変換は次のコマンドで行える。
 
@@ -83,7 +76,7 @@ node tools/db-removal/export-school-master.mjs backend/src/test/resources/legacy
 DB版へ戻す場合は旧リビジョンと元のDBを使用する。この版で読み込んだCSVはDBへ保存されないため、必要なら元CSVを再取込する。
 画面同梱・実行環境同梱・EXE化は別工程であり、現在はbackendとfrontendの起動が必要。
 
-## 実施した検証
+## DB廃止時に実施した検証
 
 - Mavenの自動テスト17件を実行。旧PostgreSQL版の58ケースと応答ハッシュがすべて一致。
 - 全474件のID・名前・区分・偏差値を元SQLと照合。
@@ -97,3 +90,15 @@ DB版へ戻す場合は旧リビジョンと元のDBを使用する。この版�
 backendを18080、frontendをlocalhost:5173で起動し、Playwrightが利用できるNode環境で実行する。
 必要なら `PLAYWRIGHT_MODULE`、`ADVISOR_TEST_BACKEND_URL`、`ADVISOR_TEST_FRONTEND_URL` で検証環境を指定できる。
 PDF・画像と新応答の作業ファイルはbackend/target配下に出力し、Gitには追加しない。
+
+## 現行UIに合わせた不要コード整理
+
+- 未使用の `GET /api/schools`、`GET /api/courses`、JSON入力の `POST /api/judgements` を廃止した。
+- 廃止API専用のDTO、一覧取得処理、Bean Validation依存と対応するテストを削除した。CSV解析・入力チェックは変更していない。
+- 使用するAPIは `POST /api/judgements/csv-import` と `POST /api/judgements/csv-preview` の2つ。
+- 廃止した一覧の4比較ケースを除き、現行CSV処理の54比較ケースと全474校のマスター照合を残す。
+- 旧検索・おすすめ校・コメント等の未使用CSSと、未使用の外部フォント読み込みを除去した。
+- 画面操作の回帰テストは `tools/ui/import-flow-check.cjs`。ファイル選択、確認・印刷ボタン、エラー・再選択、モード切替を確認する。
+- 整理後のテスト17件が成功し、現行CSVの54ケースすべてで元の期待値と一致した。
+- 整理前のビルド済み画面と整理後の画面から、一覧・個人・3教科の帳票を出力し、先頭ページのPNGが3種類とも完全一致した。全ページの枠内収まりと改ページ数（一覧6、個人26、3教科1）も確認した。
+- 比較時はブラウザーテストの `ADVISOR_TEST_STATIC_DIR` に保存済みのfrontend/distを指定できる。`ADVISOR_TEST_OUTPUT` で出力先を分ける。通常の実画面テストではこれらの指定は不要。

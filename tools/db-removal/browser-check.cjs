@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
-const output = path.join(root, 'backend/target/db-removal-browser');
+const output = path.resolve(process.env.ADVISOR_TEST_OUTPUT || path.join(root, 'backend/target/db-removal-browser'));
 fs.mkdirSync(output, {recursive:true});
 
 (async () => {
@@ -14,16 +14,29 @@ fs.mkdirSync(output, {recursive:true});
     page.on('pageerror', e => errors.push(e.message));
     const frontend = new URL(process.env.ADVISOR_TEST_FRONTEND_URL || 'http://localhost:5173');
     const backend = new URL(process.env.ADVISOR_TEST_BACKEND_URL || 'http://localhost:18080');
+    const apiOrigins = new Set([frontend.origin]);
+    if (process.env.ADVISOR_TEST_STATIC_DIR) {
+      const fixture = path.resolve(process.env.ADVISOR_TEST_STATIC_DIR);
+      const origin = frontend.origin;
+      apiOrigins.add('http://localhost:8080');
+      // Fulfilled HTML has no server address; allow loopback only in this fixture context.
+      await page.context().grantPermissions(['local-network-access'], {origin});
+      await page.route(origin + '/', route => route.fulfill({path:path.join(fixture,'index.html')}));
+      await page.route(origin + '/assets/*', route => route.fulfill({
+        path:path.join(fixture,'assets',path.basename(new URL(route.request().url()).pathname))
+      }));
+    }
     const externalRequests = [];
     page.on('request', request => {
       if (!['data:', 'blob:'].some(prefix => request.url().startsWith(prefix)) &&
-          ![frontend.origin, backend.origin].includes(new URL(request.url()).origin)) {
+          ![...apiOrigins, backend.origin].includes(new URL(request.url()).origin)) {
         externalRequests.push(request.url());
       }
     });
-    if (frontend.origin !== backend.origin) {
-      await page.route(frontend.origin + '/api/**', async route => {
-        const url = route.request().url().replace(frontend.origin, backend.origin);
+    for (const origin of apiOrigins) {
+      if (origin === backend.origin) continue;
+      await page.route(origin + '/api/**', async route => {
+        const url = route.request().url().replace(origin, backend.origin);
         await route.continue({url});
       });
     }
@@ -31,7 +44,7 @@ fs.mkdirSync(output, {recursive:true});
     await page.locator('.report-tabs button').nth(1).click();
     await page.locator('.history-controls input').setInputFiles(['01_round1.csv','02_round2.csv'].map(f => path.join(root,'test-data/csv-history',f)));
     const historyResponse = page.waitForResponse(r => r.url().endsWith('/csv-preview'));
-    await page.getByRole('button',{name:'成績一覧を作成する',exact:true}).click();
+    await page.locator('.history-controls .csv-confirm').click();
     const response = await historyResponse;
     assert.equal(response.status(),200,await response.text());
     await page.locator('.history-page .report-print-page').first().waitFor({state:'attached'});
@@ -40,20 +53,21 @@ fs.mkdirSync(output, {recursive:true});
     await page.emulateMedia({media:'screen'});
     await page.locator('.report-tabs button').nth(0).click();
     await page.locator('.score-form input').setInputFiles(path.join(root,'test-data/csv-history/01_round1.csv'));
-    await page.getByRole('button',{name:'CSVを取り込んで判定する',exact:true}).click();
+    await page.locator('.score-form .csv-confirm').click();
     await page.locator('.single-report-panel .report-print-page').first().waitFor({state:'attached'});
     assert.equal(await page.locator('.single-report-panel .report-screen-content .student-ledger').count(),26);
     await printCheck('.single-report-panel',26,'single');
     await page.emulateMedia({media:'screen'});
     const three = 'name,student_id,times,japanese,math,english,deviation_japanese,deviation_math,deviation_english,deviation_three,first_choice,second_choice,third_choice\nStudent,1,1,50,50,50,50.1,51.2,52.3,55.7,1,,245\n';
     await page.locator('.score-form input').setInputFiles({name:'three.csv',mimeType:'text/csv',buffer:Buffer.from(three)});
-    await page.getByRole('button',{name:'CSVを取り込んで判定する',exact:true}).click();
+    await page.locator('.score-form .csv-confirm').click();
     await page.waitForFunction(() => document.querySelector('.single-report-panel .ledger-student-head')?.textContent.includes('Student'));
     await printCheck('.single-report-panel',1,'three');
     const heading = await page.locator('.report-print-copy .print-score-summary thead').first().innerText();
     assert(!heading.includes('理科') && !heading.includes('社会') && !heading.includes('5教科'));
     assert.deepEqual(errors,[]);
-    assert.deepEqual(externalRequests,[]);
+    // Historical fixtures can contain external font links removed from the current app.
+    if (!process.env.ADVISOR_TEST_STATIC_DIR) assert.deepEqual(externalRequests,[]);
 
     async function printCheck(selector, count, name) {
       await page.emulateMedia({media:'print'});

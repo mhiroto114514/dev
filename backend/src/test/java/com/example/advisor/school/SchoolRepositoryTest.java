@@ -31,15 +31,18 @@ class SchoolRepositoryTest {
             assertEquals(ScoreType.FIVE_SUBJECT, course.scoreType());
         }
         assertEquals(474, id);
-        assertEquals(id, schools.findAllSchools().size());
+        long masterRows = new ClassPathResource("school-master.csv").getContentAsString(StandardCharsets.UTF_8)
+                .lines().skip(1).filter(line -> !line.isBlank()).count();
+        assertEquals(id, masterRows);
     }
 
     @Test void explicitIdsDoNotDependOnCsvOrderAndNamesArePreserved() {
         var schools = load("\uFEFF" + HEADER + "7,\"School, \"\"Special\"\"\",60.25,PRIVATE\n2,School B,60.3,NATIONAL\n9,School C,60.3,KOSEN\n");
         assertEquals("School, \"Special\"", schools.findSchoolByCode("school-7").orElseThrow().name());
         assertEquals(60.3, schools.findCourseByCode("course-7").orElseThrow().deviationValue());
-        assertEquals(java.util.List.of("school-2", "school-7", "school-9"), schools.findAllSchools().stream().map(School::code).toList());
-        assertEquals(1, schools.findSchoolsByCategory(SchoolCategory.KOSEN).size());
+        assertEquals("School B", schools.findSchoolByCode("school-2").orElseThrow().name());
+        assertEquals(SchoolCategory.NATIONAL, schools.findSchoolByCode("school-2").orElseThrow().schoolCategory());
+        assertEquals(SchoolCategory.KOSEN, schools.findSchoolByCode("school-9").orElseThrow().schoolCategory());
         assertTrue(schools.findSchoolByCode("school-123").isEmpty());
     }
 

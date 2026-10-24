@@ -7,6 +7,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +41,20 @@ class DistributionApplicationTest {
             count++;
         }
         assertTrue(count >= 2);
-        assertEquals(200, http.getForEntity("/api/schools", String.class).getStatusCode().value());
+        String csv = "name,student_id,times,japanese,math,english,deviation_japanese,deviation_math,deviation_english,deviation_three,first_choice,second_choice,third_choice\n"
+                + "Distribution Student,1,1,50,50,50,50.1,51.2,52.3,55.7,1,,\n";
+        for (String endpoint : new String[]{"csv-import", "csv-preview"}) {
+            var body = new LinkedMultiValueMap<String, Object>();
+            body.add(endpoint.equals("csv-import") ? "file" : "files", new ByteArrayResource(csv.getBytes(StandardCharsets.UTF_8)) {
+                @Override public String getFilename() { return "distribution.csv"; }
+            });
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            var result = http.postForEntity("/api/judgements/" + endpoint, new HttpEntity<>(body, headers), JsonNode.class);
+            assertEquals(200, result.getStatusCode().value());
+            assertEquals("Distribution Student", result.getBody().at("/ledgers/0/studentName").asText());
+            assertEquals(5, result.getBody().at("/ledgers/0/results").size());
+        }
     }
 
     @Test void excludesLocalConfigurationAndKeepsSchoolMaster() throws Exception {

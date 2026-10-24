@@ -2,6 +2,7 @@ import {useState} from 'react';
 import HistoryReport from './HistoryReport';
 import './history.css';
 import PrintPages from './PrintPages';
+import CsvImportForm from './CsvImportForm';
 
 const schoolCategoryLabels = {
   PUBLIC: '公立',
@@ -16,17 +17,11 @@ const scoreTypeLabels = {
 };
 
 const text = {
-  input: 'CSV入力',
   result: '結果',
-  notes: '注意事項',
-  noResult: 'CSVを取り込むと、判定結果がここに表示されます。',
   failedImport: 'CSVの取り込みに失敗しました。',
-  upload: 'CSVを取り込んで判定する',
-  uploading: '取り込み中...',
   usedScore: '判定使用偏差値',
   targetDev: '目標偏差値',
   judge: '判定',
-  csvLabel: 'CSVファイル',
   schoolName: '花咲スクール'
 };
 
@@ -49,12 +44,11 @@ function App() {
   return <>
     <style>{`@media print { @page { size: A4 ${mode === 'history' ? 'landscape' : 'portrait'}; margin: ${mode === 'history' ? '5mm' : '6mm'}; } }`}</style>
     <nav className="report-tabs" aria-label="帳票の選択">
-      <p className="report-tabs-title">帳票の種類を選択</p>
       <button type="button" aria-pressed={mode === 'single'} onClick={() => setMode('single')}>
-        <strong>個別帳票</strong><span>CSV 1件から作成</span>
+        個別帳票
       </button>
       <button type="button" aria-pressed={mode === 'history'} onClick={() => setMode('history')}>
-        <strong>成績一覧</strong><span>複数CSVをまとめて作成</span>
+        成績一覧
       </button>
     </nav>
     <div hidden={mode !== 'single'}><SingleReport/></div>
@@ -70,6 +64,7 @@ function SingleReport() {
 
   const onSubmit = async (event) => {
     event.preventDefault();
+    if (loading) return;
     if (!csvFile) {
       setError('CSVファイルを選択してください。');
       return;
@@ -77,6 +72,7 @@ function SingleReport() {
 
     setLoading(true);
     setError('');
+    setImportResult(null);
 
     const formData = new FormData();
     formData.append('file', csvFile);
@@ -98,58 +94,26 @@ function SingleReport() {
   };
 
   return (
-    <div className="page-shell">
-      <main className="content-grid">
-        <section className="panel form-panel">
-          <h2>{text.input}</h2>
-          <p>CSVを1つ選択し、個別帳票を作成します。元のCSVは手元に保管してください。</p>
-          <form onSubmit={onSubmit} className="score-form">
-            <label>
-              <span>{text.csvLabel}</span>
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                onChange={(event) => setCsvFile(event.target.files?.[0] ?? null)}
-                required
-              />
-            </label>
-            {csvFile && <p className="csv-file-name">{csvFile.name}</p>}
-            <button type="submit" disabled={loading}>
-              {loading ? text.uploading : text.upload}
-            </button>
-          </form>
+    <div className="page-shell report-workspace">
+      <main className="content-grid report-flow">
+        <CsvImportForm files={csvFile ? [csvFile] : []} loading={loading} error={error}
+          canPrint={Boolean(importResult?.ledgers?.length)}
+          onSubmit={onSubmit} onFilesChange={files => {
+            setCsvFile(files[0] ?? null);
+            setImportResult(null);
+            setError('');
+          }}/>
 
-          <div className="hint-box">
-            <p>{text.notes}</p>
-            <ul>
-              <li>CSVの必須列: `name`, `student_id`, `times`, 各教科得点/偏差値, 志望校列。</li>
-              <li>生徒コードと氏名はCSVに記載された情報を使います。成績はアプリ内に保存しません。</li>
-              <li>取り込み完了後、この画面から全員分を一括印刷できます。</li>
-            </ul>
-          </div>
-        </section>
-
-        <section className="panel result-panel single-report-panel">
+        {importResult && <section className="panel result-panel single-report-panel">
           <h2 className="result-title">{text.result}</h2>
 
-          {error && <div className="error-box">{error}</div>}
-          {!importResult && !error && <div className="empty-state">{text.noResult}</div>}
-
-          {importResult && (
-            <>
             <div className="result-stack report-screen-content">
-              <button onClick={() => window.print()} className="print-button" style={{marginBottom: '20px'}}>
-                この結果を印刷する
-              </button>
-
               {importResult.ledgers.map((ledger, index) => (
                 <StudentLedger ledger={ledger} key={`${ledger.studentCode}-${ledger.times}-${index}`}/>
               ))}
             </div>
             <PrintPages items={importResult.ledgers} renderItem={(ledger, index) => <StudentLedger ledger={ledger} key={index}/>}/>
-            </>
-          )}
-        </section>
+        </section>}
       </main>
     </div>
   );

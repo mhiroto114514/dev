@@ -23,21 +23,14 @@ class DatabaseFreeApplicationTest {
     @Autowired ApplicationContext context;
     @Autowired MockMvc http;
 
-    @Test void startsWithoutAnyDatabaseOrDriverAndKeepsListEndpoints() throws Exception {
+    @Test void startsWithoutAnyDatabaseOrDriver() {
         assertTrue(context.getBeansOfType(DataSource.class).isEmpty());
         for (String type : new String[]{"org.postgresql.Driver", "org.h2.Driver", "com.zaxxer.hikari.HikariDataSource", "org.springframework.jdbc.core.JdbcTemplate"}) {
             assertFalse(ClassUtils.isPresent(type, getClass().getClassLoader()), type);
         }
-        http.perform(get("/api/schools")).andExpect(status().isOk())
-                .andExpect(jsonPath("publicSchools", hasSize(247)))
-                .andExpect(jsonPath("privateSchools", hasSize(218)))
-                .andExpect(jsonPath("nationalSchools", hasSize(6)))
-                .andExpect(jsonPath("kosenSchools", hasSize(3)));
-        http.perform(get("/api/courses")).andExpect(status().isOk());
-        http.perform(get("/api/students/1")).andExpect(status().isNotFound());
     }
 
-    @Test void csvAndJsonEndpointsWorkWithoutDatabaseAndKeepValidation() throws Exception {
+    @Test void csvEndpointsWorkWithoutDatabaseAndKeepValidation() throws Exception {
         String header = "name,student_id,times,japanese,math,english,deviation_japanese,deviation_math,deviation_english,deviation_three,first_choice,second_choice,third_choice\n";
         String row = "Student,1,1,50,50,50,50.1,51.2,52.3,55.7,1,,\n";
         for (String endpoint : new String[]{"csv-import", "csv-preview"}) {
@@ -49,15 +42,5 @@ class DatabaseFreeApplicationTest {
         }
         http.perform(multipart("/api/judgements/csv-import").file(new MockMultipartFile("file", "bad.csv", "text/csv", (header + row.replace(",1,,", ",2147483647,,")).getBytes(StandardCharsets.UTF_8))))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("message").exists());
-        http.perform(post("/api/judgements").contentType("application/json").content("{}"))
-                .andExpect(status().isBadRequest());
-        http.perform(post("/api/judgements").contentType("application/json").content("""
-                {"studentCode":1,"studentName":"Student","times":1,
-                 "japaneseScore":0,"mathScore":0,"englishScore":0,
-                 "japaneseDeviation":50,"mathDeviation":50,"englishDeviation":50,
-                 "threeSubjectDeviation":50,"saitamaDeviationFive":75,
-                 "desiredCourseCodes":["course-1"]}
-                """))
-                .andExpect(status().isOk()).andExpect(jsonPath("results[0].judgement").value("A"));
     }
 }

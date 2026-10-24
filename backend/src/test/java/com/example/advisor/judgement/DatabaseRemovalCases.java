@@ -12,7 +12,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.function.Supplier;
 
-/** Shared inputs for capturing the old database version and verifying its replacement. */
+/** Current CSV behavior compared with frozen responses captured before database removal. */
 public final class DatabaseRemovalCases {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String HEADER = "name,student_id,times,japanese,math,english,science,socialstudies,"
@@ -22,11 +22,7 @@ public final class DatabaseRemovalCases {
 
     public static Map<String, String> capture(CsvImportService csv, SchoolRepository schools) throws Exception {
         Map<String, String> hashes = new TreeMap<>();
-        record(hashes, "schools", () -> new SchoolController(schools).listSchools());
-        record(hashes, "courses", () -> new CourseController(schools).listCourses());
-        record(hashes, "all-schools", schools::findAllSchools);
-        record(hashes, "all-courses", schools::findAllCourses);
-        List<Course> courses = schools.findAllCourses();
+        List<Course> courses = fixtureCourses(schools);
         for (double delta : new double[]{-5.1, -5, -4.9, -2.1, -2, -1.9, 2.9, 3, 3.1}) {
             StringBuilder rows = new StringBuilder(HEADER);
             for (Course course : courses) {
@@ -70,6 +66,17 @@ public final class DatabaseRemovalCases {
                 file("first.csv", HEADER + three), file("conflict.csv", HEADER + second.replace("Student,", "Other,"))}));
         record(hashes, "later-error-whole-file", () -> csv.importAndJudge(file("later.csv", HEADER + three + three.replace("Student,2,1,", "Other,3,1,").replace(",50,50,50,", ",abc,50,50,"))));
         return hashes;
+    }
+
+    private static List<Course> fixtureCourses(SchoolRepository schools) throws Exception {
+        String master = new org.springframework.core.io.ClassPathResource("school-master.csv")
+                .getContentAsString(StandardCharsets.UTF_8);
+        return master.lines().skip(1).filter(line -> !line.isBlank())
+                .map(line -> line.substring(0, line.indexOf(',')))
+                .map(id -> schools.findCourseByCode("course-" + id).orElseThrow())
+                .sorted(Comparator.comparingDouble(Course::deviationValue).reversed()
+                        .thenComparingInt(course -> Integer.parseInt(course.code().substring(7))))
+                .toList();
     }
 
     private static void exercise(Map<String, String> hashes, CsvImportService csv, String name, String body) throws Exception {
