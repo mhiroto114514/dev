@@ -1,5 +1,8 @@
 ﻿# README
 
+配布用EXEの作成・利用方法は [docs/distribution.md](docs/distribution.md) を参照してください。
+以下は開発環境での起動手順です。
+
 ## 1. このシステムで何を動かすか
 
 CSVから判定と帳票を作成します。必要ソフトの導入は [first-time-setup.md](first-time-setup.md) を参照してください。
