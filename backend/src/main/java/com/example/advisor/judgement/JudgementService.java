@@ -6,22 +6,21 @@ import com.example.advisor.school.SchoolRepository;
 import com.example.advisor.school.ScoreType;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
 public class JudgementService {
 
     private final SchoolRepository schoolRepository;
-    private final JudgementPersistenceService judgementPersistenceService;
-
-    public JudgementService(SchoolRepository schoolRepository, JudgementPersistenceService judgementPersistenceService) {
+    public JudgementService(SchoolRepository schoolRepository) {
         this.schoolRepository = schoolRepository;
-        this.judgementPersistenceService = judgementPersistenceService;
     }
 
     public JudgementResponse judge(JudgementRequest request) {
         JudgementResponse response = evaluate(request, false);
-        judgementPersistenceService.save(request);
+        validateStoredDeviationRange(request);
         return response;
     }
 
@@ -29,20 +28,20 @@ public class JudgementService {
         return evaluate(request, true);
     }
 
-    private JudgementResponse evaluate(JudgementRequest request, boolean readOnly) {
+    private JudgementResponse evaluate(JudgementRequest request, boolean allowEmptyChoices) {
         List<Integer> ids = SchoolChoices.ids(request.desiredCourseCodes());
-        if (!readOnly && ids.stream().allMatch(java.util.Objects::isNull)) {
+        if (!allowEmptyChoices && ids.stream().allMatch(java.util.Objects::isNull)) {
             throw new IllegalArgumentException("志望校を1校以上選択してください。");
         }
         return new JudgementResponse(ids.stream()
-                .map(id -> id == null ? null : buildSchoolResult("course-" + id, request, readOnly))
+                .map(id -> id == null ? null : buildSchoolResult("course-" + id, request))
                 .toList());
     }
 
-    private SchoolJudgementResult buildSchoolResult(String courseCode, JudgementRequest request, boolean readOnly) {
-        Course desiredCourse = (readOnly ? schoolRepository.readCourseByCode(courseCode) : schoolRepository.findCourseByCode(courseCode))
+    private SchoolJudgementResult buildSchoolResult(String courseCode, JudgementRequest request) {
+        Course desiredCourse = schoolRepository.findCourseByCode(courseCode)
             .orElseThrow(() -> new IllegalArgumentException("志望コースが見つかりません。"));
-        School desiredSchool = (readOnly ? schoolRepository.readSchoolByCode(desiredCourse.schoolCode()) : schoolRepository.findSchoolByCode(desiredCourse.schoolCode()))
+        School desiredSchool = schoolRepository.findSchoolByCode(desiredCourse.schoolCode())
             .orElseThrow();
 
         double studentDeviation = resolveStudentDeviation(desiredCourse.scoreType(), request);
@@ -61,6 +60,19 @@ public class JudgementService {
             desiredCourse.deviationValue(),
             difference
         );
+    }
+
+    // The import endpoint previously rejected numeric overflow when INSERT ran.
+    private void validateStoredDeviationRange(JudgementRequest request) {
+        Double[] values = {request.japaneseDeviation(), request.mathDeviation(), request.englishDeviation(),
+                request.scienceDeviation(), request.socialstudiesDeviation(), request.threeSubjectDeviation(),
+                request.fiveSubjectDeviation(), request.saitamaDeviationThree(), request.saitamaDeviationFive()};
+        for (Double value : values) {
+            if (value != null && (!Double.isFinite(value) || BigDecimal.valueOf(value)
+                    .setScale(1, RoundingMode.HALF_UP).abs().compareTo(new BigDecimal("999.9")) > 0)) {
+                throw new IllegalArgumentException("偏差値が扱える範囲（-999.9〜999.9）を超えています。");
+            }
+        }
     }
 
     private double resolveStudentDeviation(ScoreType scoreType, JudgementRequest request) {

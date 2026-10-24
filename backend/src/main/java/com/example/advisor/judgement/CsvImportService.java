@@ -1,7 +1,6 @@
 package com.example.advisor.judgement;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
@@ -22,7 +21,6 @@ public class CsvImportService {
         this.judgementService = judgementService;
     }
 
-    @Transactional
     public CsvImportResponse importAndJudge(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Please select a CSV file.");

@@ -102,7 +102,7 @@ function SingleReport() {
       <main className="content-grid">
         <section className="panel form-panel">
           <h2>{text.input}</h2>
-          <p>CSVを1つ選択し、成績を登録して個別帳票を作成します。</p>
+          <p>CSVを1つ選択し、個別帳票を作成します。元のCSVは手元に保管してください。</p>
           <form onSubmit={onSubmit} className="score-form">
             <label>
               <span>{text.csvLabel}</span>
@@ -123,7 +123,7 @@ function SingleReport() {
             <p>{text.notes}</p>
             <ul>
               <li>CSVの必須列: `name`, `student_id`, `times`, 各教科得点/偏差値, 志望校列。</li>
-              <li>`student_id` が未登録なら student テーブルへ自動登録します。</li>
+              <li>生徒コードと氏名はCSVに記載された情報を使います。成績はアプリ内に保存しません。</li>
               <li>取り込み完了後、この画面から全員分を一括印刷できます。</li>
             </ul>
           </div>
